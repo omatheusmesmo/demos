@@ -3,6 +3,7 @@ package dev.omatheusmesmo.demo.threading.context;
 import dev.omatheusmesmo.demo.common.Observed;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.smallrye.common.vertx.ContextLocals;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
@@ -42,12 +43,20 @@ public class ContextResource {
                 .toCompletionStage());
     }
 
+    /**
+     * Runs the store on the event loop's root context instead of the request's duplicated context, through the
+     * same {@link ContextLocals} API the filter uses. Only the context differs, so the refusal comes from the
+     * root context itself.
+     */
     @GET
     @Path("/root")
-    @NonBlocking
-    public Observed<String> root() {
+    public Uni<Observed<String>> root() {
         Context root = VertxContext.getRootContext(Vertx.currentContext());
-        root.putLocal(RequestTagFilter.KEY, "shared by every request on this event loop");
-        return Observed.of("stored on the root context");
+        return Uni.createFrom()
+                .item(() -> {
+                    ContextLocals.put(RequestTagFilter.KEY, "shared by every request on this event loop");
+                    return Observed.of("stored on the root context");
+                })
+                .runSubscriptionOn(task -> root.runOnContext(ignored -> task.run()));
     }
 }
