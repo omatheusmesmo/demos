@@ -9,27 +9,42 @@ shift 2
 WORK=$(mktemp -d)
 
 collect() {
-    find "$PROJECT" -path '*/target/*-reports/TEST-*.xml' -print0 | xargs -0 -r python3 -I -c '
-import sys, xml.etree.ElementTree as ET
-for path in sys.argv[1:]:
-    for case in ET.parse(path).getroot().iter("testcase"):
-        outcome = "fail" if case.find("failure") is not None or case.find("error") is not None else (
-            "skip" if case.find("skipped") is not None else "pass")
-        print(f"{case.get(\"classname\")}.{case.get(\"name\")}\t{outcome}")
-' "$@" | sort > "$1"
+    python3 -I - "$PROJECT" <<'PARSE' | sort > "$1"
+import pathlib, sys, xml.etree.ElementTree as ET
+for report in pathlib.Path(sys.argv[1]).glob("**/target/*-reports/TEST-*.xml"):
+    for case in ET.parse(report).getroot().iter("testcase"):
+        if case.find("failure") is not None or case.find("error") is not None:
+            outcome = "fail"
+        elif case.find("skipped") is not None:
+            outcome = "skip"
+        else:
+            outcome = "pass"
+        print(case.get("classname") + "." + case.get("name") + "	" + outcome)
+PARSE
 }
 
 run_suite() {
-    (cd "$PROJECT" && ./mvnw -B -q -fae verify -DskipITs=false "$@" > "$WORK/maven-$1.log" 2>&1)
+    local label=$1
+    shift
+    (cd "$PROJECT" && ./mvnw -B -q -fae verify -DskipITs=false "$@" > "$WORK/maven-$label.log" 2>&1)
+}
+
+require_results() {
+    if [ ! -s "$WORK/$1.tsv" ]; then
+        echo "No test results for $1; Maven failed before running tests:" >&2
+        grep -m 5 "^\[ERROR\]" "$WORK/maven-$1.log" >&2
+        exit 1
+    fi
 }
 
 echo "baseline: current version"
 (cd "$PROJECT" && ./mvnw -B -q clean > /dev/null 2>&1)
-run_suite baseline "$@"; collect "$WORK/baseline.tsv"
+run_suite baseline "$@"; collect "$WORK/baseline.tsv"; require_results baseline
 
 echo "candidate: Quarkus $VERSION"
 (cd "$PROJECT" && ./mvnw -B -q clean > /dev/null 2>&1)
 run_suite candidate "-Dquarkus.platform.version=$VERSION" "$@"; collect "$WORK/candidate.tsv"
+[ -s "$WORK/candidate.tsv" ] || echo "No test results on $VERSION: the build failed before running tests (see compilation errors below)."
 
 echo
 echo "| Test | Baseline | Quarkus $VERSION |"
