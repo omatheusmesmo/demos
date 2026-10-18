@@ -18,6 +18,7 @@
         <module>labs/threading</module>
         <module>integrations/rest-client</module>
         <module>integrations/postgres</module>
+        <module>integrations/kafka</module>
     </modules>
 
     <properties>
