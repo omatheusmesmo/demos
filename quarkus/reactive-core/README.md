@@ -99,9 +99,12 @@ after `make test`.
 
 - Every test of `labs/mutiny`, `rest-client`, `postgres`, `kafka`, `redis` and `scheduler` has the same outcome on
   3.40.1 and 4.0.0.Beta1, thread assertions, concurrency limits and pinning audit included.
-- `labs/threading` does not compile: `ContextResource` stores a local on the root context with
-  `Context.putLocal(Object, Object)`, which Vert.x 5 removed. The module needs the Vert.x 5 context local API before it
-  runs on Quarkus 4; until then its tests are reported as missing on 4.0.0.Beta1.
+- `labs/threading` first failed to compile: `ContextResource` stored a local on the root context with
+  `Context.putLocal(Object, Object)`, which Vert.x 5 removed (its `Context` only takes typed `ContextLocal` keys now).
+  The endpoint now runs `ContextLocals.put` on the root context through `runOnContext`. `ContextLocals` is the
+  SmallRye API Quarkus ships for both lines (`smallrye-common-vertx-context` on Vert.x 4,
+  `smallrye-common-vertx5-context` on Vert.x 5), so the same source compiles on both, and all 39 tests of the module
+  pass on both.
 
 ## Benchmark
 
