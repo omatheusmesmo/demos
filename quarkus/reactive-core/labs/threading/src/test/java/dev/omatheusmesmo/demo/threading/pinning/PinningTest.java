@@ -1,5 +1,6 @@
 package dev.omatheusmesmo.demo.threading.pinning;
 
+import static dev.omatheusmesmo.demo.testsupport.ThreadMatchers.ranOnVirtualThread;
 import static io.restassured.RestAssured.get;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,12 +16,12 @@ class PinningTest {
     @Test
     @ShouldNotPin
     void aPlainVirtualThreadEndpointDoesNotPin() {
-        get("/dispatch/virtual").then().statusCode(200);
+        get("/dispatch/virtual").then().statusCode(200).body("thread", ranOnVirtualThread());
     }
 
     @Test
     @ShouldPin(atMost = 1)
     void aBlockingStaticInitializerPinsTheCarrier() {
-        get("/pinning/class-initializer").then().statusCode(200);
+        get("/pinning/class-initializer").then().statusCode(200).body("thread", ranOnVirtualThread());
     }
 }

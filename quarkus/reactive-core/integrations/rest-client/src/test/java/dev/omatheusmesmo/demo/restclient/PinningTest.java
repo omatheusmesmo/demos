@@ -1,5 +1,6 @@
 package dev.omatheusmesmo.demo.restclient;
 
+import static dev.omatheusmesmo.demo.testsupport.ThreadMatchers.ranOnVirtualThread;
 import static io.restassured.RestAssured.get;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,6 +16,6 @@ class PinningTest {
     @Test
     @ShouldNotPin
     void theRestClientDoesNotPinAVirtualThread() {
-        get("/quotes/virtual").then().statusCode(200);
+        get("/quotes/virtual").then().statusCode(200).body("thread", ranOnVirtualThread());
     }
 }

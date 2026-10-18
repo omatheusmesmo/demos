@@ -17,6 +17,7 @@
         <module>labs/mutiny</module>
         <module>labs/threading</module>
         <module>integrations/rest-client</module>
+        <module>integrations/postgres</module>
     </modules>
 
     <properties>
