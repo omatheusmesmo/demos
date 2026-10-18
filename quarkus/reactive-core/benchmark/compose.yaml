@@ -3,7 +3,7 @@ name: reactive-core-bench
 services:
   upstream:
     image: wiremock/wiremock:3.13.2
-    command: ["--container-threads", "200", "--no-request-journal"]
+    command: ["--container-threads", "1000", "--async-response-enabled", "true", "--async-response-threads", "200", "--no-request-journal"]
     volumes:
       - ./wiremock:/home/wiremock:ro
     networks: [bench]

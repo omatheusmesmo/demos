@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Benchmarks the three models in three scenarios (HTTP fan-out, pool-limited database, CPU-bound) and writes a
-# Markdown summary under benchmark/results. Environment variables of tooling/bench/run.sh (RUNS, WARMUP, DURATION,
-# VUS, CPUS, MEMORY, HEAP) are passed through.
+# Benchmarks the three models and writes a Markdown summary under benchmark/results. Scenarios: fan-out (HTTP calls
+# with default connection pools), fan-out-wide-pool (the REST Client pool raised to 1000, so the worker pool becomes
+# the limit), database (pool-limited) and cpu. SCENARIOS selects which ones run; the summary covers every scenario
+# measured on the same day. Environment variables of tooling/bench/run.sh (RUNS, WARMUP, DURATION, VUS, CPUS,
+# MEMORY, HEAP) are passed through.
 set -euo pipefail
 DEMO=$(cd "$(dirname "$0")/.." && pwd)
 BENCH=$DEMO/benchmark
@@ -28,9 +30,17 @@ scenario() {
     done
 }
 
-scenario fan-out reactive-core/rest-client /quotes "-e UPSTREAM_URL=http://upstream:8080"
-scenario database reactive-core/postgres /books "$DB_ENV"
-scenario cpu reactive-core/threading /cpu ""
+SCENARIOS=${SCENARIOS:-fan-out fan-out-wide-pool database cpu}
+for name in $SCENARIOS; do
+    case $name in
+        fan-out) scenario fan-out reactive-core/rest-client /quotes "-e UPSTREAM_URL=http://upstream:8080" ;;
+        fan-out-wide-pool) scenario fan-out-wide-pool reactive-core/rest-client /quotes \
+            "-e UPSTREAM_URL=http://upstream:8080 -e QUARKUS_REST_CLIENT_UPSTREAM_CONNECTION_POOL_SIZE=1000" ;;
+        database) scenario database reactive-core/postgres /books "$DB_ENV" ;;
+        cpu) scenario cpu reactive-core/threading /cpu "" ;;
+        *) echo "unknown scenario: $name" >&2; exit 1 ;;
+    esac
+done
 
 {
     echo "# Benchmark $STAMP"
@@ -38,7 +48,8 @@ scenario cpu reactive-core/threading /cpu ""
     echo "Machine: $(nproc) CPUs, $(uname -sr). Containers: ${CPUS:-2} CPUs, ${MEMORY:-512m} memory, heap ${HEAP:-256m}."
     echo "Load: ${VUS:-100} virtual users, ${WARMUP:-30s} warmup discarded, ${RUNS:-5} runs of ${DURATION:-60s}."
     echo "Values are median (min to max) across runs. This is one machine and one workload, not a general benchmark."
-    for name in fan-out database cpu; do
+    for name in fan-out fan-out-wide-pool database cpu; do
+        [ -d "$RAW/$name" ] || continue
         echo
         echo "## $name"
         echo
