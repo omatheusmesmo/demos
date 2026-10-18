@@ -1,0 +1,59 @@
+name: Quarkus Maven (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Folder of the demo, relative to the repository root
+        required: true
+        type: string
+      modules:
+        description: JSON array of Maven module paths to verify, one job each
+        required: true
+        type: string
+      java-version:
+        required: false
+        type: string
+        default: '25'
+      quarkus-version:
+        description: Override quarkus.platform.version; empty keeps the version in the pom
+        required: false
+        type: string
+        default: ''
+      allow-failure:
+        description: Report failures without failing the workflow, for early warning runs
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  verify:
+    name: ${{ matrix.module }}${{ inputs.quarkus-version != '' && format(' on Quarkus {0}', inputs.quarkus-version) || '' }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.allow-failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJSON(inputs.modules) }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+          cache: maven
+          cache-dependency-path: ${{ inputs.working-directory }}/**/pom.xml
+
+      - name: Verify with integration tests
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          QUARKUS_VERSION: ${{ inputs.quarkus-version }}
+        run: ./mvnw -B verify -DskipITs=false -pl "${{ matrix.module }}" -am ${QUARKUS_VERSION:+-Dquarkus.platform.version=$QUARKUS_VERSION}
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ strategy.job-index }}${{ inputs.quarkus-version != '' && format('-{0}', inputs.quarkus-version) || '' }}
+          path: ${{ inputs.working-directory }}/**/target/*-reports/

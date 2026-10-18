@@ -1,0 +1,41 @@
+name: quarkus/reactive-core
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - quarkus/reactive-core/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/quarkus-reactive-core.yml
+  pull_request:
+    paths:
+      - quarkus/reactive-core/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/quarkus-reactive-core.yml
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    uses: ./.github/workflows/_quarkus-maven.yml
+    with:
+      working-directory: quarkus/reactive-core
+      modules: >-
+        ["shared/common", "shared/test-support", "labs/mutiny", "labs/threading",
+        "integrations/rest-client", "integrations/postgres", "integrations/kafka",
+        "integrations/redis", "integrations/scheduler"]
+
+  early-warning:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_quarkus-maven.yml
+    with:
+      working-directory: quarkus/reactive-core
+      quarkus-version: 4.0.0.Beta1
+      allow-failure: true
+      modules: >-
+        ["labs/mutiny", "labs/threading", "integrations/rest-client", "integrations/postgres",
+        "integrations/kafka", "integrations/redis", "integrations/scheduler"]
