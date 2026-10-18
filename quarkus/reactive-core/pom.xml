@@ -16,6 +16,7 @@
         <module>shared/test-support</module>
         <module>labs/mutiny</module>
         <module>labs/threading</module>
+        <module>integrations/rest-client</module>
     </modules>
 
     <properties>
