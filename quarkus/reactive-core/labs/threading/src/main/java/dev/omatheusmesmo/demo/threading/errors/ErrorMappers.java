@@ -9,8 +9,8 @@ public class ErrorMappers {
 
     @ServerExceptionMapper
     public RestResponse<ErrorResponse> map(RuntimeException exception) {
-        int status = exception instanceof WebApplicationException web ? web.getResponse().getStatus() : 500;
-        return RestResponse.status(RestResponse.Status.fromStatusCode(status),
-                new ErrorResponse(status, exception.getClass().getSimpleName(), exception.getMessage()));
+        int fallback = exception instanceof WebApplicationException web ? web.getResponse().getStatus() : 500;
+        ErrorResponse body = ErrorResponse.from(exception, fallback);
+        return RestResponse.status(RestResponse.Status.fromStatusCode(body.status()), body);
     }
 }

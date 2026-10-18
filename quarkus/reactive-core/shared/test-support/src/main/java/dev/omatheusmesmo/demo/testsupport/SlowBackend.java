@@ -15,13 +15,16 @@ import java.util.Map;
  *
  * <p>Arguments: {@value #PROPERTY} (required, the configuration key that receives the base URL),
  * {@value #DELAY_MS} (default {@code 0}) and {@value #BODY} (default {@code {}}). Tests can change the stub at
- * runtime through a {@link WireMockServer} field annotated with {@link InjectSlowBackend}.
+ * runtime through a {@link WireMockServer} field annotated with {@link InjectSlowBackend}. The server runs with
+ * enough threads that concurrent calls from a test are never queued by WireMock itself.
  */
 public class SlowBackend implements QuarkusTestResourceLifecycleManager {
 
     public static final String PROPERTY = "property";
     public static final String DELAY_MS = "delay-ms";
     public static final String BODY = "body";
+
+    private static final int CONTAINER_THREADS = 100;
 
     private String property;
     private int delayMs;
@@ -40,7 +43,7 @@ public class SlowBackend implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        server = new WireMockServer(options().dynamicPort());
+        server = new WireMockServer(options().dynamicPort().containerThreads(CONTAINER_THREADS));
         server.start();
         server.stubFor(get(anyUrl()).willReturn(okJson(body).withFixedDelay(delayMs)));
         return Map.of(property, server.baseUrl());
