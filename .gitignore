@@ -1,0 +1,20 @@
+# Build output
+target/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+.factorypath
+
+# OS
+.DS_Store
+
+# Quarkus
+.quarkus/
+
+# Benchmark raw output
+**/benchmark/results/raw/
