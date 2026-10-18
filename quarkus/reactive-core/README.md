@@ -92,6 +92,17 @@ after `make test`.
 | `labs/threading` | aPlainVirtualThreadEndpointDoesNotPin | passed |
 | `labs/threading` | aBlockingStaticInitializerPinsTheCarrier (`@ShouldPin`) | passed: it still pins |
 
+## Quarkus 4 rerun (4.0.0.Beta1, 2026-10-18)
+
+`make try-quarkus-4` reruns the whole suite with `-Dquarkus.platform.version=4.0.0.Beta1` (Vert.x 5.1.8, Netty
+4.2.18) and lists the tests whose outcome changed.
+
+- Every test of `labs/mutiny`, `rest-client`, `postgres`, `kafka`, `redis` and `scheduler` has the same outcome on
+  3.40.1 and 4.0.0.Beta1, thread assertions, concurrency limits and pinning audit included.
+- `labs/threading` does not compile: `ContextResource` stores a local on the root context with
+  `Context.putLocal(Object, Object)`, which Vert.x 5 removed. The module needs the Vert.x 5 context local API before it
+  runs on Quarkus 4; until then its tests are reported as missing on 4.0.0.Beta1.
+
 ## Benchmark
 
 `make bench` compares the three models under load with k6. The methodology is being reworked before results are
