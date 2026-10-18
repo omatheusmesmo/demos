@@ -1,0 +1,21 @@
+name: reactive-core-bench
+
+services:
+  upstream:
+    image: wiremock/wiremock:3.13.2
+    command: ["--container-threads", "200", "--no-request-journal"]
+    volumes:
+      - ./wiremock:/home/wiremock:ro
+    networks: [bench]
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: quarkus
+      POSTGRES_USER: quarkus
+      POSTGRES_PASSWORD: quarkus
+    networks: [bench]
+
+networks:
+  bench:
+    name: reactive-core-bench
