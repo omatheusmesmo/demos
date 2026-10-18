@@ -5,7 +5,10 @@ same.
 
 ## Repository layout
 
-- Demos live in `<area>/<demo>/`, where the area is a domain: `quarkus/`, `java/`, `ai/`, `cloud/`.
+- Demos live in `<area>/<demo>/`, where the area is a domain: `quarkus/`, `quarkus-langchain4j/`, `cloud/`, and new
+  ones as needed. Areas are one level deep.
+- Some demos are git submodules (see `.gitmodules`). Do not edit them from the monorepo: work in the submodule's own
+  repository, then update the recorded commit here.
 - `tooling/` holds domain-agnostic scripts only. Never add a reference to a specific demo there.
 - Each demo has its own `AGENTS.md` with demo-specific instructions. Read it before changing the demo.
 

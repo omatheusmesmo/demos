@@ -1,0 +1,16 @@
+[submodule "quarkus/intro"]
+	path = quarkus/intro
+	url = https://github.com/omatheusmesmo/demo-quarkus-intro.git
+[submodule "quarkus/cloud-native"]
+	path = quarkus/cloud-native
+	url = https://github.com/omatheusmesmo/quarkus-cloud-native.git
+[submodule "quarkus-langchain4j/onthinking"]
+	path = quarkus-langchain4j/onthinking
+	url = https://github.com/omatheusmesmo/onthinking-demo.git
+[submodule "quarkus-langchain4j/incident-response-sre"]
+	path = quarkus-langchain4j/incident-response-sre
+	url = https://github.com/omatheusmesmo/incident-response-sre.git
+	branch = feature/console-redesign-simulated-world
+[submodule "cloud/floci-aws"]
+	path = cloud/floci-aws
+	url = https://github.com/omatheusmesmo/floci-quarkus-demo.git
