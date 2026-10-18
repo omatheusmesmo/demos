@@ -19,6 +19,8 @@
         <module>integrations/rest-client</module>
         <module>integrations/postgres</module>
         <module>integrations/kafka</module>
+        <module>integrations/redis</module>
+        <module>integrations/scheduler</module>
     </modules>
 
     <properties>
