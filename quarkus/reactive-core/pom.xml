@@ -14,6 +14,7 @@
     <modules>
         <module>shared/common</module>
         <module>shared/test-support</module>
+        <module>labs/mutiny</module>
     </modules>
 
     <properties>
