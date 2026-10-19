@@ -54,4 +54,11 @@ public class DispatchResource {
     public Observed<String> virtual() {
         return Observed.of("@RunOnVirtualThread");
     }
+
+    @GET
+    @Path("/virtual-uni")
+    @RunOnVirtualThread
+    public Uni<Observed<String>> virtualUni() {
+        return Uni.createFrom().item(() -> Observed.of("@RunOnVirtualThread with a Uni signature"));
+    }
 }

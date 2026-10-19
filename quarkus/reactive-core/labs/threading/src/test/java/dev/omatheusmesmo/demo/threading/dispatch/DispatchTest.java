@@ -51,6 +51,17 @@ class DispatchTest {
         get("/non-blocking").then().statusCode(200).body("thread", ranOnEventLoop());
     }
 
+    /**
+     * The virtual thread guide says {@code @RunOnVirtualThread} can only be used on endpoints that are blocking by
+     * annotation or signature. Quarkus REST only rejects it when the method is also marked {@code @NonBlocking}.
+     */
+    @Test
+    void runOnVirtualThreadAlsoMovesAUniSignatureToAVirtualThread() {
+        get("/virtual-uni").then().statusCode(200)
+                .body("thread", ranOnVirtualThread())
+                .body("thread", ranOnDuplicatedContext());
+    }
+
     @Test
     void runOnVirtualThreadUsesANamedVirtualThread() {
         get("/virtual").then().statusCode(200)
