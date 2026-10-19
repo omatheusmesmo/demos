@@ -53,10 +53,12 @@ make threads MODULE=integrations/rest-client
 | A synchronous signature runs on a worker, a `Uni` on an event loop | `labs/threading` `DispatchTest` | 2 |
 | `@Blocking`, `@NonBlocking` and `@RunOnVirtualThread` override the signature | `DispatchTest` | 2 |
 | `@Transactional` no longer sends a `Uni` endpoint to a worker | `DispatchTest` | 2 |
+| `@RunOnVirtualThread` also moves a `Uni` endpoint to a virtual thread | `DispatchTest` | 2 |
 | Non-blocking requests are served by the configured number of event loops | `EventLoopsTest` | 1 |
 | `await()` is refused on an event loop and fine on a virtual thread | `AwaitTest` | 1, 4 |
 | Two `executeBlocking` tasks from one context run one at a time unless unordered | `ExecuteBlockingTest` | 1 |
 | The request filter runs on the endpoint's thread; context locals follow work to another thread, thread locals do not | `ContextTest` | 2 |
+| A pre-matching filter runs on the event loop, so its thread local never reaches a worker or virtual thread | `ContextTest` | 2 |
 | The root context refuses context locals | `ContextTest` | 2 |
 | A blocking static initializer pins a virtual thread on Java 25 | `labs/threading` `PinningTest` | 4 |
 | Mutiny runs stages on the emitting thread; `emitOn` and `runSubscriptionOn` move them | `labs/mutiny` `threads` | 3 |
@@ -68,6 +70,7 @@ make threads MODULE=integrations/rest-client
 | The connection pool limits virtual threads | `postgres` `PoolLimitTest` | 4 |
 | `@RunOnVirtualThread` consumers lose the message order; the concurrency key caps them | `kafka` `ConsumersTest`, `ConcurrencyLimitTest` | 3, 4 |
 | The scheduler picks the thread from the method signature | `scheduler` `JobsTest` | 2 |
+| Messaging picks the thread from the signature too, and still treats `@Transactional` as blocking | `kafka` `ConsumersTest`, `EventLoopExecutionModeTest` | 2 |
 
 Articles of the series *Inside the Quarkus reactive core* (one per Sunday; links are added as each one is published):
 
@@ -121,7 +124,14 @@ Things the tests turned up while the demo was written, each documented in its mo
   Reactive support ([quarkusio/quarkus#51063](https://github.com/quarkusio/quarkus/pull/51063)); the Quarkus REST
   guide still documents it. A `Uni` endpoint with `@Transactional` stays on the event loop and JTA refuses to start.
 - **Request filters share the endpoint's thread.** In all three models, a `@ServerRequestFilter` runs on the thread
-  that runs the endpoint, which is why a `ThreadLocal` set in a filter looks like it works.
+  that runs the endpoint, which is why a `ThreadLocal` set in a filter looks like it works. A pre-matching filter
+  runs on the event loop instead, and its `ThreadLocal` is gone by the time a worker or virtual thread runs the
+  endpoint.
+- **`@RunOnVirtualThread` is not limited to blocking signatures in Quarkus REST.** The virtual thread guide says it
+  is; the code only rejects it together with `@NonBlocking`, and a `Uni` endpoint with it runs on a virtual thread.
+- **The same annotation, two rules.** Since Quarkus 3.10 ([quarkusio/quarkus#39768](https://github.com/quarkusio/quarkus/pull/39768)),
+  messaging dispatches a synchronous consumer to a worker, like Quarkus REST. Messaging still treats `@Transactional`
+  as blocking; Quarkus REST no longer does.
 - **The reactive REST Client fails a timeout with a checked exception.** `NoStackTraceTimeoutException` extends
   `java.util.concurrent.TimeoutException`, so an exception mapper for `RuntimeException` misses it.
 - **The first JDBC call on a virtual thread can pin once.** The JDK initialises `sun.nio.ch.Poller` on the first

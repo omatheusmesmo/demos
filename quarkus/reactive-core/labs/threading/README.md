@@ -5,8 +5,8 @@ that thread, not only on the response body.
 
 | Area | Endpoints | What the tests prove |
 |---|---|---|
-| Dispatch | `/dispatch/*` | A synchronous signature runs on a worker, a `Uni` on an event loop. `@Blocking`, `@NonBlocking` and `@RunOnVirtualThread` override the signature. `@Transactional` no longer does (see below). |
-| Context | `/context/*` | The request filter runs on the same thread as the endpoint in all three models. `ContextLocals` follow work that hops to another thread inside the same duplicated context; a `ThreadLocal` stays behind. The root context refuses locals. |
+| Dispatch | `/dispatch/*` | A synchronous signature runs on a worker, a `Uni` on an event loop. `@Blocking`, `@NonBlocking` and `@RunOnVirtualThread` override the signature. `@Transactional` no longer does, and `@RunOnVirtualThread` works on a `Uni` signature too (see below). |
+| Context | `/context/*` | The request filter runs on the same thread as the endpoint in all three models. `ContextLocals` follow work that hops to another thread inside the same duplicated context; a `ThreadLocal` stays behind. A pre-matching filter runs on the event loop, so its `ThreadLocal` is lost. The root context refuses locals. |
 | Event loops | `/event-loops/current` | With `quarkus.vertx.event-loops-pool-size=2`, every non-blocking request is served by one of two event loops. |
 | Blocking | `/await/*`, `/execute-blocking/*` | `await()` is refused on an event loop and fine on a virtual thread. Two `executeBlocking` tasks from the same context run one at a time unless `ordered = false`. |
 | CPU | `/cpu/*` | The same CPU-bound work in the three models, used by the benchmark. |
@@ -19,7 +19,11 @@ that thread, not only on the response body.
   `Uni` signature wins and JTA refuses to start on the event loop.
 - The virtual thread guide says filters may not run on the virtual thread. With a `@ServerRequestFilter`, they do:
   the filter and the endpoint share the thread in every model, which is why a `ThreadLocal` set in the filter is
-  visible. The difference only shows when work moves to another thread.
+  visible. The difference only shows when work moves to another thread, or when the filter is pre-matching: those
+  run on the event loop before the endpoint, and so its thread, is known.
+- The virtual thread guide says `@RunOnVirtualThread` can only be used on endpoints that are blocking by annotation
+  or signature. Quarkus REST only rejects it together with `@NonBlocking`; on a `Uni` endpoint it runs the method on a
+  virtual thread.
 
 ## Run
 
