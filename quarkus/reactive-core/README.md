@@ -61,6 +61,7 @@ make threads MODULE=integrations/rest-client
 | A pre-matching filter runs on the event loop, so its thread local never reaches a worker or virtual thread | `ContextTest` | 2 |
 | The root context refuses context locals | `ContextTest` | 2 |
 | A blocking static initializer pins a virtual thread on Java 25 | `labs/threading` `PinningTest` | 4 |
+| A `Uni` is a recipe: nothing runs until a subscription, each subscription runs again; `invoke` drops a returned `Uni` | `labs/mutiny` `recipes` | 3 |
 | Mutiny runs stages on the emitting thread; `emitOn` and `runSubscriptionOn` move them | `labs/mutiny` `threads` | 3 |
 | `combine` over synchronous sources is sequential; merge and concatenate differ in order | `composition` | 3 |
 | Retry is resubscription; failures are terminal unless isolated per item | `failures` | 3 |

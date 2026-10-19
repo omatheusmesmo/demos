@@ -5,6 +5,8 @@ class, and each test was first run against a naive version of that class to show
 
 | Package | Class | What the tests prove |
 |---|---|---|
+| `recipes` | `ExchangeRates` | a `Uni` is a recipe: building it calls nothing, each subscription calls again, `item(value)` already called, `memoize` shares one result |
+| `recipes` | `Checkout` | a `Uni` returned inside `invoke` is dropped and never runs; `call` subscribes to it |
 | `threads` | `BlockingLookup` | Mutiny schedules nothing: a blocking call runs on the subscribing thread until `runSubscriptionOn` moves it |
 | `threads` | `ItemProcessor` | stages run on the emitting thread; `emitOn` moves every following stage |
 | `composition` | `QuoteAggregator` | `Uni.combine()` over synchronous sources runs them one after the other; sources overlap only when they are asynchronous |
@@ -18,6 +20,7 @@ class, and each test was first run against a naive version of that class to show
 Red messages from the naive versions, kept because they explain the behaviour better than prose:
 
 - `expected: <[a, b]> but was: <[a:ran-alone, b]>`: chaining two sources with `chain` runs them one at a time.
+- `expected: <[order-42]> but was: <[]>`: `invoke(audit::apply)` compiled, and the audit `Uni` it returned was never subscribed.
 - `expected: <3> but was: <100>`: an emitter that ignores demand produced 100 readings when 3 were requested.
 - `expected: <lookup-worker> but was: <main>`: without `runSubscriptionOn`, the blocking call ran on the caller.
 
