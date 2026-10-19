@@ -56,6 +56,24 @@ class ContextTest {
     }
 
     @Test
+    void aPreMatchingFilterStaysOnTheEventLoopSoItsThreadLocalNeverReachesTheWorker() {
+        tagged().get("/pre-matching/worker").then().statusCode(200)
+                .body("thread", ranOnWorker())
+                .body("result.filterThread", startsWith("vert.x-eventloop-thread-"))
+                .body("result.contextLocal", is(TAG))
+                .body("result.threadLocal", nullValue());
+    }
+
+    @Test
+    void aPreMatchingFilterStaysOnTheEventLoopSoItsThreadLocalNeverReachesTheVirtualThread() {
+        tagged().get("/pre-matching/virtual").then().statusCode(200)
+                .body("thread", ranOnVirtualThread())
+                .body("result.filterThread", startsWith("vert.x-eventloop-thread-"))
+                .body("result.contextLocal", is(TAG))
+                .body("result.threadLocal", nullValue());
+    }
+
+    @Test
     void contextLocalsFollowTheWorkToAnotherThreadButThreadLocalsStayBehind() {
         tagged().get("/hop").then().statusCode(200)
                 .body("thread", ranOnWorker())

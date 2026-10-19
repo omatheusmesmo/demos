@@ -35,6 +35,19 @@ public class ContextResource {
     }
 
     @GET
+    @Path("/pre-matching/worker")
+    public Observed<Tags> preMatchingWorker() {
+        return Observed.of(Tags.readPreMatching());
+    }
+
+    @GET
+    @Path("/pre-matching/virtual")
+    @RunOnVirtualThread
+    public Observed<Tags> preMatchingVirtual() {
+        return Observed.of(Tags.readPreMatching());
+    }
+
+    @GET
     @Path("/hop")
     public Uni<Observed<Tags>> hop() {
         Context context = Vertx.currentContext();
@@ -54,7 +67,7 @@ public class ContextResource {
         Context root = VertxContext.getRootContext(Vertx.currentContext());
         return Uni.createFrom()
                 .item(() -> {
-                    ContextLocals.put(RequestTagFilter.KEY, "shared by every request on this event loop");
+                    ContextLocals.put(RequestTagFilter.REGULAR.tagKey(), "shared by every request on this event loop");
                     return Observed.of("stored on the root context");
                 })
                 .runSubscriptionOn(task -> root.runOnContext(ignored -> task.run()));
