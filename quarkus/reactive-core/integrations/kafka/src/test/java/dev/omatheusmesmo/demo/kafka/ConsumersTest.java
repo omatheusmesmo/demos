@@ -32,6 +32,29 @@ class ConsumersTest {
                 .body("processed[0].thread", ranOnDuplicatedContext());
     }
 
+    /**
+     * Since Quarkus 3.10 (quarkusio/quarkus#39768), Reactive Messaging follows the same signature rule as Quarkus
+     * REST: a synchronous consumer with no annotation runs on a worker. Before that, it ran on the event loop, and
+     * {@code quarkus.messaging.blocking.signatures.execution.mode=event-loop} brings that behaviour back.
+     */
+    @Test
+    void aSynchronousConsumerWithoutAnnotationsRunsOnAWorker() {
+        Orders.send(devServices, "orders-plain", "1:0");
+
+        Orders.awaitProcessed("plain", 1).body("processed[0].thread", ranOnWorker());
+    }
+
+    /**
+     * Quarkus REST stopped treating {@code @Transactional} as blocking (quarkusio/quarkus#51063). Reactive
+     * Messaging still does.
+     */
+    @Test
+    void aTransactionalConsumerRunsOnAWorker() {
+        Orders.send(devServices, "orders-transactional", "1:0");
+
+        Orders.awaitProcessed("transactional", 1).body("processed[0].thread", ranOnWorker());
+    }
+
     @Test
     void theBlockingConsumerRunsOnAWorker() {
         Orders.send(devServices, "orders-blocking", "1:10");

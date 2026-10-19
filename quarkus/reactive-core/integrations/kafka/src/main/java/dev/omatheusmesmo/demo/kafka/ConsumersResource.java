@@ -31,6 +31,18 @@ public class ConsumersResource {
         return logs.virtual().report();
     }
 
+    @GET
+    @Path("/plain")
+    public ConsumerReport plain() {
+        return logs.plain().report();
+    }
+
+    @GET
+    @Path("/transactional")
+    public ConsumerReport transactional() {
+        return logs.transactional().report();
+    }
+
     @DELETE
     public void clear() {
         logs.clear();
