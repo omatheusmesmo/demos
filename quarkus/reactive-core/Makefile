@@ -2,8 +2,7 @@
 MVN := ./mvnw -B
 SELECT := $(if $(MODULE),-pl $(MODULE) -am,)
 QUARKUS_4 ?= 4.0.0.Beta1
-# Above the 200 worker threads Quarkus sizes for a 2 CPU container, otherwise no model hits a limit.
-VUS ?= 400
+QUARKUS_VERSION ?= 3.40.1
 
 .PHONY: test it dev threads bench pinning-report try-quarkus-4
 
@@ -23,7 +22,7 @@ threads:
 	scripts/threads.sh $(MODULE)
 
 bench:
-	VUS=$(VUS) benchmark/run.sh
+	QUARKUS_VERSION=$(QUARKUS_VERSION) benchmark/run.sh
 
 pinning-report:
 	scripts/pinning-report.sh

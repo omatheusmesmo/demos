@@ -6,6 +6,7 @@ services:
     command: ["--container-threads", "1000", "--async-response-enabled", "true", "--async-response-threads", "200", "--no-request-journal"]
     volumes:
       - ./wiremock:/home/wiremock:ro
+    cpuset: "0,1,6,7"
     networks: [bench]
 
   postgres:
@@ -14,6 +15,7 @@ services:
       POSTGRES_DB: quarkus
       POSTGRES_USER: quarkus
       POSTGRES_PASSWORD: quarkus
+    cpuset: "0,1,6,7"
     networks: [bench]
 
 networks:
