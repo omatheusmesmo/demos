@@ -1,19 +1,30 @@
 """Summarises one variant measured by run.sh as Markdown table rows, one row per arrival rate.
 
 Usage: python3 -I summarize.py rows <label> <variant-dir>
-       python3 -I summarize.py gc <label> <variant-dir>
 
-Every value is the median across runs, with the range in parentheses when runs disagree, because averages hide
-outliers. Errors count failed checks (non-200 answers and timeouts); dropped counts requests k6 could not even start
-because every virtual user was busy, which means the server could not keep up with the arrival rate.
+Every value is the median across iterations (one fresh JVM each), with the range in parentheses when they disagree,
+because averages hide outliers.
+
+- Achieved is successful (2xx) responses per second of the measured window.
+- Errors are requests that started but did not end in a 2xx: timeouts, connection errors and error statuses.
+- Unsent are scheduled requests that never started inside the window because every load generator session or
+  connection was busy with earlier ones: the server could not keep up with the arrival rate.
+- CPU is the application container (200% is two CPUs), RSS the peak resident set of the JVM process.
+- GC is the total of the collector pauses that fell inside the measured window.
+- Other CPU is the busy time of the application CPUs that the container did not use: other processes of the host
+  running on them. Near 0 means the measurement was not disturbed.
+CPU, RSS and other CPU only use the samples taken inside the measured window.
 """
+import datetime
 import json
+import os
 import pathlib
 import re
 import statistics
 import sys
 
-UNITS = {"B": 1 / 2**20, "KiB": 1 / 1024, "MiB": 1, "GiB": 1024}
+GC_PAUSE = re.compile(r"^\[(\S+)\].*Pause.*?([\d.]+)ms\s*$", re.M)
+CLOCK_TICKS = os.sysconf("SC_CLK_TCK")
 
 
 def spread(values, digits=0):
@@ -25,62 +36,78 @@ def spread(values, digits=0):
     return text
 
 
-def run_metrics(summary_file):
-    metrics = json.loads(summary_file.read_text())["metrics"]
-    checks = metrics.get("checks", {})
-    total = checks.get("passes", 0) + checks.get("fails", 0)
-    duration = metrics.get("http_req_duration", {})
+def seconds(duration):
+    value = re.fullmatch(r"(\d+)(ms|s|m)", duration)
+    return int(value.group(1)) * {"ms": 0.001, "s": 1, "m": 60}[value.group(2)]
+
+
+def load_metrics(all_json):
+    result = json.loads(all_json.read_text())
+    params = result["info"]["params"]
+    summary = next(s for s in result["stats"] if s["phase"] == "load")["total"]["summary"]
+    window = seconds(params["DURATION"])
+    ok = summary["extensions"]["http"]["status_2xx"]
+    started = summary["requestCount"]
+    percentiles = summary["percentileResponseTime"]
     return {
-        "achieved": metrics.get("http_reqs", {}).get("rate", 0),
-        "p50": duration.get("med", 0),
-        "p99": duration.get("p(99)", 0),
-        "errors": 100 * checks.get("fails", 0) / total if total else 0,
-        "dropped": metrics.get("dropped_iterations", {}).get("count", 0),
+        "achieved": ok / window,
+        "p50": percentiles["50.0"] / 1e6,
+        "p99": percentiles["99.0"] / 1e6,
+        "errors": 100 * (started - ok) / started if started else 0,
+        "unsent": max(0, round(int(params["RATE"]) * window) - started),
+        "window": (summary["startTime"] / 1000, summary["endTime"] / 1000),
     }
 
 
-def resource_metrics(stats_file):
-    cpu, memory = [], []
-    for line in stats_file.read_text().splitlines():
-        sample = json.loads(line)
-        cpu.append(float(sample["CPUPerc"].rstrip("%")))
-        used = re.match(r"([\d.]+)(\w+)", sample["MemUsage"])
-        memory.append(float(used.group(1)) * UNITS[used.group(2)])
-    return {"cpu": statistics.mean(cpu) if cpu else 0, "memory": max(memory) if memory else 0}
+def resources(samples_file, window):
+    start, end = window
+    lines = [line.split() for line in samples_file.read_text().splitlines()]
+    inside = [line for line in lines if len(line) >= 4 and start <= int(line[0]) / 1000 <= end]
+    if len(inside) < 2:
+        return {"cpu": 0, "other": 0, "rss": 0}
+    first, last = inside[0], inside[-1]
+    elapsed = (int(last[0]) - int(first[0])) / 1000
+    container = 100 * (int(last[1]) - int(first[1])) / 1e6 / elapsed
+    cores = 100 * (int(last[2]) - int(first[2])) / CLOCK_TICKS / elapsed
+    return {
+        "cpu": container,
+        "other": max(0.0, cores - container),
+        "rss": max((int(line[4]) / 1024 for line in inside if len(line) > 4), default=0),
+    }
 
 
-def gc_pauses(gc_log):
-    pauses = [float(m.group(1)) for m in re.finditer(r"Pause.*?([\d.]+)ms\s*$", gc_log.read_text(), re.M)]
-    collector = re.search(r"Using (\w+)", gc_log.read_text())
-    return collector.group(1) if collector else "unknown", pauses
+def gc_pause_ms(gc_log, window):
+    start, end = window
+    total = 0.0
+    for match in GC_PAUSE.finditer(gc_log.read_text() if gc_log.exists() else ""):
+        moment = datetime.datetime.fromisoformat(match.group(1)).timestamp()
+        if start <= moment <= end:
+            total += float(match.group(2))
+    return total
 
 
 def rows(label, variant_dir):
-    rate_dirs = sorted(variant_dir.glob("rate-*"), key=lambda d: int(d.name.split("-")[1]))
-    for rate_dir in rate_dirs:
-        runs = sorted(rate_dir.glob("run-*.json"))
-        k6 = [run_metrics(run) for run in runs]
-        resources = [resource_metrics(run.with_suffix(".stats.jsonl")) for run in runs]
-        loads = [float(f.read_text()) for f in rate_dir.glob("run-*.load-*")]
-        print(f"| {label} | {rate_dir.name.split('-')[1]} "
-              f"| {spread([m['achieved'] for m in k6])} "
-              f"| {spread([m['p50'] for m in k6])} "
-              f"| {spread([m['p99'] for m in k6])} "
-              f"| {spread([m['errors'] for m in k6], 1)} "
-              f"| {spread([m['dropped'] for m in k6])} "
-              f"| {spread([r['cpu'] for r in resources])} "
-              f"| {spread([r['memory'] for r in resources])} "
-              f"| {max(loads):.1f} |")
-
-
-def gc(label, variant_dir):
-    gc_log = variant_dir / "gc" / "gc.log"
-    if not gc_log.exists():
-        return
-    collector, pauses = gc_pauses(gc_log)
-    longest = max(pauses) if pauses else 0
-    print(f"- {label}: {collector}, {len(pauses)} pauses, {sum(pauses):.0f} ms in total, longest {longest:.1f} ms")
+    iterations = sorted(d for d in variant_dir.glob("iteration-*") if (d / "done").exists())
+    rates = sorted({int(d.name.split("-")[1]) for i in iterations for d in i.glob("rate-*")})
+    for rate in rates:
+        loads, usage, pauses = [], [], []
+        for iteration in iterations:
+            rate_dir = iteration / f"rate-{rate}"
+            metrics = load_metrics(rate_dir / "all.json")
+            loads.append(metrics)
+            usage.append(resources(rate_dir / "samples.txt", metrics["window"]))
+            pauses.append(gc_pause_ms(iteration / "gc.log", metrics["window"]))
+        print(f"| {label} | {rate} "
+              f"| {spread([m['achieved'] for m in loads])} "
+              f"| {spread([m['p50'] for m in loads])} "
+              f"| {spread([m['p99'] for m in loads])} "
+              f"| {spread([m['errors'] for m in loads], 1)} "
+              f"| {spread([m['unsent'] for m in loads])} "
+              f"| {spread([u['cpu'] for u in usage])} "
+              f"| {spread([u['rss'] for u in usage])} "
+              f"| {spread(pauses)} "
+              f"| {spread([u['other'] for u in usage])} |")
 
 
 if __name__ == "__main__":
-    {"rows": rows, "gc": gc}[sys.argv[1]](sys.argv[2], pathlib.Path(sys.argv[3]))
+    {"rows": rows}[sys.argv[1]](sys.argv[2], pathlib.Path(sys.argv[3]))

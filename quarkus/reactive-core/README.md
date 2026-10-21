@@ -22,7 +22,7 @@ Built on Quarkus 3.40.1 (Vert.x 4.5, Netty 4.1, Mutiny 3.3) and Java 25, and rer
 
 - Java 25. With SDKMAN, `sdk env` picks it from `.sdkmanrc`.
 - Docker, for the Dev Services that start PostgreSQL, Kafka and Redis in tests and dev mode.
-- k6 and jq, only for the benchmark.
+- JBang and Python 3, only for the benchmark (JBang fetches Hyperfoil, the load generator).
 
 ## Quick start
 
@@ -112,10 +112,21 @@ after `make test`.
 
 ## Benchmark
 
-`make bench` compares the three models under load with k6. The methodology is being reworked before results are
-published here: an open load model (arrival rate) instead of a fixed number of virtual users, dedicated CPU sets for
-the application, the load generator and the dependencies, an explicit garbage collector, and resource sampling during
-the run.
+`make bench` compares the three models under load, following the methodology of the
+[Quarkus performance guide](https://quarkus.io/guides/performance-measure) and its reference lab,
+[quarkusio/spring-quarkus-perf-comparison](https://github.com/quarkusio/spring-quarkus-perf-comparison):
+
+- [Hyperfoil](https://hyperfoil.io) as the load generator, in an open model (a constant arrival rate), so a slow
+  server shows up as latency and unsent requests instead of quietly lowering the load (coordinated omission).
+- A fresh JVM per iteration (3), each with a 2 minute warmup and a 30 second cooldown before anything is measured.
+- `-Xms` = `-Xmx`, `-XX:ActiveProcessorCount` matching the CPU set, ParallelGC (the collector of the reference lab
+  and of the UBI image), and separate CPU sets for the application, the load generator and the dependencies.
+- Memory as the RSS of the JVM process (`docker top`), never `docker stats`, which the guide warns against.
+- CPU from the container cgroup, plus the time other host processes took on the application CPUs, so a disturbed
+  run is visible in the results.
+
+Scenarios and arrival rates are described at the top of `benchmark/run.sh`; the shared tooling lives in
+`tooling/bench`. Summaries land in `benchmark/results/` (raw Hyperfoil results and GC logs stay local).
 
 ## Findings
 

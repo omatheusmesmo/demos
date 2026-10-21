@@ -1,0 +1,44 @@
+# Hyperfoil benchmark for tooling/bench/run.sh: one GET at a constant arrival rate (an open model).
+#
+# New requests start on schedule whether or not earlier ones have finished, and each one that starts on time is timed
+# from the moment it was scheduled, so a slow server shows up as latency instead of quietly lowering the load (the
+# coordinated omission described in https://quarkus.io/guides/performance-measure). Arrivals are evenly spaced (variance: false) rather than
+# Poisson, so the number of requests started can be compared with the number scheduled: requests that cannot start
+# because every session or connection is busy fall behind (the ones that catch up later are timed from when they
+# start, so latency past that point is a lower bound), and Hyperfoil records "Exceeded session limit" when the sessions
+# run out.
+#
+# The layout follows the load test of https://github.com/quarkusio/spring-quarkus-perf-comparison, with an open
+# constantRate phase in place of its closed one with fixed users.
+#
+# Parameters (-P NAME=value): HOST, PORT, PATH, RATE (requests per second), DURATION, MAX_DURATION, TIMEOUT,
+# SESSIONS (requests in flight at most), CONNECTIONS, THREADS.
+name: open-rate
+threads: !param THREADS 4
+http:
+  - protocol: http
+    host: !param HOST localhost
+    port: !param PORT 8080
+    sharedConnections: !param CONNECTIONS 1000
+    allowHttp2: false
+    useHttpCache: false
+ergonomics:
+  repeatCookies: false
+  userAgentFromSession: false
+
+phases:
+  - load:
+      constantRate:
+        usersPerSec: !param RATE 100
+        variance: false
+        maxSessions: !param SESSIONS 1000
+        duration: !param DURATION 30s
+        maxDuration: !param MAX_DURATION 1m
+        scenario:
+          maxRequests: 1
+          maxSequences: 1
+          orderedSequences:
+            - call:
+                - httpRequest:
+                    GET: !param PATH /
+                    timeout: !param TIMEOUT 10s
