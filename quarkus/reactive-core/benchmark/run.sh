@@ -46,9 +46,9 @@ scenario() {
 SCENARIOS=${SCENARIOS:-fan-out fan-out-wide-pool database cpu}
 for name in $SCENARIOS; do
     case $name in
-        fan-out) scenario fan-out reactive-core/rest-client /quotes "$FAN_OUT_RATES" \
+        fan-out) scenario fan-out reactive-core/rest-client /fan-out "$FAN_OUT_RATES" \
             "-e UPSTREAM_URL=http://upstream:8080" ;;
-        fan-out-wide-pool) scenario fan-out-wide-pool reactive-core/rest-client /quotes "$FAN_OUT_WIDE_POOL_RATES" \
+        fan-out-wide-pool) scenario fan-out-wide-pool reactive-core/rest-client /fan-out "$FAN_OUT_WIDE_POOL_RATES" \
             "-e UPSTREAM_URL=http://upstream:8080 -e QUARKUS_REST_CLIENT_UPSTREAM_CONNECTION_POOL_SIZE=1000" ;;
         database) scenario database reactive-core/postgres /books "$DATABASE_RATES" "$DB_ENV" ;;
         cpu) scenario cpu reactive-core/threading /cpu "$CPU_RATES" "" ;;
