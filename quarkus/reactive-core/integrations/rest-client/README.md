@@ -24,6 +24,20 @@ only difference left is what waits: a blocked worker, the event loop that does n
 - The REST Client does not pin a virtual thread on Java 25.
 - The benchmark endpoints overlap both calls in every model (one upstream delay, not two) and fail through the
   same deadline with the same Mutiny `TimeoutException`, even when the client read timeout is longer.
+- A call cancelled by the deadline while it still waits for a connection is never sent.
+- Above the capacity of the connection pool (5 connections, 100 ms upstream, 30 requests per second for 25 that
+  fit), the worker variant serves every request and sends no wasted call: 20 workers keep the wait for a
+  connection under the deadline. The reactive and virtual thread variants fail most requests, yet the upstream
+  receives every call, faster than 5 connections should carry.
+
+## Overload: why the worker survives
+
+The reactive and virtual thread variants let every call wait for a connection. Once that wait nears the deadline, a
+call leaves the queue just in time to be sent, and its answer arrives after the request has already failed. The
+upstream does the work for nothing. Cancelling a call already sent resets the stream, and on HTTP/1.1 Vert.x closes
+the connection (`Http1ClientConnection.reset` in Vert.x 5, `Http1xClientConnection.reset` in Vert.x 4), so the pool
+opens a new one while the upstream is still busy with the abandoned call. The worker pool acts as a bulkhead: the
+extra requests wait for a worker, before their deadline starts.
 
 ## Finding worth knowing
 
