@@ -5,7 +5,9 @@ Usage: python3 -I summarize.py rows <label> <variant-dir>
 Every value is the median across iterations (one fresh JVM each), with the range in parentheses when they disagree,
 because averages hide outliers.
 
-- Achieved is successful (2xx) responses per second of the measured window.
+- Achieved is successful (2xx) responses per second of the whole phase, from its start until the last response
+  (requests still in flight when the arrival window closes are waited for), like the Quarkus reference lab computes
+  throughput.
 - Errors are requests that started but did not end in a 2xx: timeouts, connection errors and error statuses.
 - Unsent are scheduled requests that never started inside the window because every load generator session or
   connection was busy with earlier ones: the server could not keep up with the arrival rate.
@@ -50,7 +52,7 @@ def load_metrics(all_json):
     started = summary["requestCount"]
     percentiles = summary["percentileResponseTime"]
     return {
-        "achieved": ok / window,
+        "achieved": ok / ((summary["endTime"] - summary["startTime"]) / 1000),
         "p50": percentiles["50.0"] / 1e6,
         "p99": percentiles["99.0"] / 1e6,
         "errors": 100 * (started - ok) / started if started else 0,
