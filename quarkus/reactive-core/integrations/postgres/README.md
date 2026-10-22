@@ -18,6 +18,18 @@ application and manage the same plain `@Entity`, each through its own Panache re
 - With `quarkus.datasource.jdbc.max-size=4`, twelve concurrent virtual thread requests are all in flight at once,
   but exactly four connections are used: virtual threads remove the worker pool limit, not the connection pool limit.
 - In steady state, Hibernate ORM and the PostgreSQL driver do not pin a virtual thread on Java 25.
+- With 5 connections in each pool and twice the load they can serve, from clients that give up after 2 s, every
+  model runs queries for requests nobody waits for anymore, and more than half of the database work is wasted.
+  After the last client gave up, the database stays busy for under 2 s with workers (at most 20 requests wait),
+  under 5 s with virtual threads (Agroal fails a wait for a connection after 5 s), and for more than 5 s with the
+  reactive client, whose wait queue has no limit (`AbandonedQueryTest`).
+
+## The default pools are not the same size
+
+Out of the box the JDBC pool has 50 connections and the reactive pool 20. With a 200 ms query that is 250 against
+100 queries per second, and the benchmark shows the reactive variant failing at 200 requests per second while the
+other two still serve them. That is the default configuration, not the model: with equal pools, `AbandonedQueryTest`
+shows all three degrading the same way.
 
 ## Finding worth knowing
 
