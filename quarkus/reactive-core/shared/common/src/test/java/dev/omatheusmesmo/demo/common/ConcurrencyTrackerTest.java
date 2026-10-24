@@ -84,11 +84,21 @@ class ConcurrencyTrackerTest {
     }
 
     @Test
+    void countsEveryPieceOfWorkThatStarted() {
+        tracker.track(() -> "first");
+        tracker.track(() -> "second");
+        tracker.track(Uni.createFrom().item("lazy"));
+
+        assertEquals(2, tracker.started());
+    }
+
+    @Test
     void resetClearsThePeak() {
         tracker.track(() -> "work");
         tracker.reset();
 
         assertEquals(0, tracker.peak());
+        assertEquals(0, tracker.started());
     }
 
     private static void await(CountDownLatch latch) {
