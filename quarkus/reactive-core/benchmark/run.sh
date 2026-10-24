@@ -68,8 +68,10 @@ done
         "${COOLDOWN:-30} s cooldown, then every rate for ${DURATION:-30s} in ascending order, ${PAUSE:-15} s apart."
     echo
     echo "Values are the median across iterations, with the range in parentheses when they differ. Achieved counts"
-    echo "2xx responses per second. Errors are started requests that did not end in a 2xx (timeouts included)."
-    echo "Unsent are scheduled requests the load generator could not start because every session was busy. CPU is the"
+    echo "2xx responses per second over the whole phase, drain included. Errors are started requests that did not end"
+    echo "in a 2xx (timeouts included). The load generator keeps at most min(rate x timeout, ${MAX_SESSIONS:-5000})"
+    echo "requests in flight; Unsent are scheduled requests it could not start because all of them were busy, and past"
+    echo "that point latency describes its own queue, not an open stream of requests. CPU is the"
     echo "mean of the application container (200% is both CPUs), RSS the peak resident set of the JVM, GC the pause"
     echo "time inside the measured window. Other CPU is time other host processes took on the application CPUs."
     for name in fan-out fan-out-wide-pool database cpu; do
