@@ -3,7 +3,12 @@ package dev.omatheusmesmo.demo.restclient;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.oneOf;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dev.omatheusmesmo.demo.testsupport.Concurrently;
@@ -15,15 +20,22 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.Test;
 
 /**
- * Ten requests, so twenty calls, share one connection to a 300 ms upstream. Before the one second deadline the
- * connection carries at most four calls; the deadline cancels the rest while they still wait for it, and the
- * REST Client never sends them.
+ * After one request warms the endpoint up, ten requests, so twenty calls, share one connection to a 300 ms upstream. Before the one second deadline the
+ * connection carries four calls, the fourth one still in flight when the deadline fires. The deadline cancels the
+ * other sixteen while they still wait for the connection, and the REST Client never sends them, although the queue
+ * would have drained them in six seconds.
+ *
+ * <p>Cancelling the fourth call closes the connection, and the pool may open a new one for the next waiter a moment
+ * before that waiter's own cancellation lands, so one more call can slip out.
  */
 @QuarkusTest
 @TestHTTPEndpoint(FanOutResource.class)
@@ -36,17 +48,23 @@ class CancelledCallTest {
 
     private static final int REQUESTS = 10;
     private static final int CALLS_BEFORE_THE_DEADLINE = 4;
+    private static final int RACING_THE_RECONNECT = 1;
+    private static final Duration TIME_TO_DRAIN_EVERY_CALL = Duration.ofSeconds(7);
 
     @InjectSlowBackend
     WireMockServer upstream;
 
     @Test
     void aCallCancelledWhileWaitingForAConnectionIsNeverSent() {
-        Concurrently.get(REQUESTS, "/reactive");
-        LockSupport.parkNanos(Duration.ofSeconds(3).toNanos());
+        RestAssured.get("/reactive").then().statusCode(200);
+        upstream.resetRequests();
 
+        List<Integer> statuses = Concurrently.get(REQUESTS, "/reactive").stream().map(Response::statusCode).toList();
+        LockSupport.parkNanos(TIME_TO_DRAIN_EVERY_CALL.toNanos());
+
+        assertThat(statuses, everyItem(oneOf(200, 504)));
         assertThat(upstream.countRequestsMatching(anyRequestedFor(anyUrl()).build()).getCount(),
-                lessThanOrEqualTo(CALLS_BEFORE_THE_DEADLINE));
+                is(both(greaterThan(0)).and(lessThanOrEqualTo(CALLS_BEFORE_THE_DEADLINE + RACING_THE_RECONNECT))));
     }
 
     public static class OneConnection implements QuarkusTestProfile {

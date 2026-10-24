@@ -24,11 +24,14 @@ only difference left is what waits: a blocked worker, the event loop that does n
 - The REST Client does not pin a virtual thread on Java 25.
 - The benchmark endpoints overlap both calls in every model (one upstream delay, not two) and fail through the
   same deadline with the same Mutiny `TimeoutException`, even when the client read timeout is longer.
-- A call cancelled by the deadline while it still waits for a connection is never sent.
+- A call cancelled by the deadline while it still waits for a connection is never sent: of twenty calls sharing one
+  connection to a 300 ms upstream, at most five reach it (`CancelledCallTest`).
 - Above the capacity of the connection pool (5 connections, 100 ms upstream, 30 requests per second for 25 that
-  fit), the worker variant serves every request and sends no wasted call: 20 workers keep the wait for a
-  connection under the deadline. The reactive and virtual thread variants fail most requests, yet the upstream
-  receives every call, faster than 5 connections should carry.
+  fit), the worker variant serves every request and sends no wasted call: 10 workers keep the wait for a
+  connection under the deadline. The reactive and virtual thread variants fail more than half of the requests, yet
+  the upstream receives nearly every call, faster than 5 connections should carry (`FanOutOverloadTest`, which
+  prints what it measured). Measured on 3.40.1 and 4.0.0.Beta1: worker 300 of 300 at most 50 calls in one second;
+  reactive 110 and 119, virtual 118 and 122, with all 600 calls sent and up to 62 in one second.
 
 ## Overload: why the worker survives
 
@@ -38,6 +41,10 @@ upstream does the work for nothing. Cancelling a call already sent resets the st
 the connection (`Http1ClientConnection.reset` in Vert.x 5, `Http1xClientConnection.reset` in Vert.x 4), so the pool
 opens a new one while the upstream is still busy with the abandoned call. The worker pool acts as a bulkhead: the
 extra requests wait for a worker, before their deadline starts.
+
+On Vert.x 4 (Quarkus 3.x) the client `read-timeout` also runs while a call waits for a connection, so with the
+default of 1000 ms it races the deadline for queued calls. The overload tests set it to 10 s, so the deadline is the
+only thing that fails a request.
 
 ## Finding worth knowing
 
