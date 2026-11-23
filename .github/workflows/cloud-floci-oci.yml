@@ -1,0 +1,24 @@
+name: cloud/floci-oci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - cloud/floci-oci/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/cloud-floci-oci.yml
+  pull_request:
+    paths:
+      - cloud/floci-oci/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/cloud-floci-oci.yml
+  workflow_dispatch:
+
+jobs:
+  verify:
+    uses: ./.github/workflows/_quarkus-maven.yml
+    with:
+      working-directory: cloud/floci-oci
+      modules: '["."]'
