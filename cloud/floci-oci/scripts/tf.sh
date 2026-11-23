@@ -18,7 +18,9 @@ clients=(
   oci_identity.IdentityClient
   oci_object_storage.ObjectStorageClient
   oci_kms.KmsVaultClient
+  oci_vault.VaultsClient
   oci_queue.QueueAdminClient
+  oci_psql.PostgresqlClient
 )
 overrides=""
 for client in "${clients[@]}"; do

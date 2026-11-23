@@ -4,21 +4,24 @@ Instructions for coding agents working on this demo. The repository rules in `/A
 
 ## What this demo is
 
-A Quarkus service that uses OCI Vault/KMS, Object Storage and Queue through the OCI Java SDK, with Oracle Database
-from Quarkus Dev Services, tested against floci-oci. Every test checks the OCI service directly (the row, the
-object, the message), not only the HTTP response. Keep it that way.
+An expense receipts service (Quarkus) that uses OCI Database with PostgreSQL, Vault Secrets, Object Storage
+pre-authenticated requests, Queue and KMS through the OCI Java SDK, tested against floci-oci. It is a floci-oci
+showroom: every backing service is an OCI service that floci-oci emulates. Every test checks the OCI side directly
+(the object, the ciphertext, the dead-letter queue), not only the HTTP response. Keep it that way.
 
 ## Rules
 
 - The application never provisions OCI resources. Terraform (`terraform/`) does in dev, `OciProvisioner` does in
-  tests. A new resource goes in both, and its identifiers reach the application as `orders.*` configuration.
+  tests. A new resource goes in both, and its identifiers reach the application as `expenses.*` configuration.
 - Keep the floci-oci image pinned (`compose.yaml`, `FlociOciContainer.IMAGE`) and the same in both places.
-- floci-oci has no Oracle Database service. Do not describe the database as emulated by floci-oci.
+- Do not add a service floci-oci does not emulate. Check the list at the pinned tag, not on `main`.
+- The database password stays in the Vault secret. Never put it in `.env`, properties or test config.
 - Before claiming floci-oci behaviour in docs or the article, verify it in the floci-oci source at the pinned tag
-  or with a test here.
+  or with a test here. A floci-oci bug gets an upstream issue and a workaround that is also correct on real OCI.
 
 ## Build and test
 
-- Java 25 (`.sdkmanrc`). `make test` runs everything and needs only Docker.
-- Oracle Database Free can take over a minute to start; `quarkus.devservices.timeout` is 5 minutes for that reason.
+- Java 25 (`.sdkmanrc`). `make test` runs everything and needs only Docker (floci-oci uses the Docker socket to
+  start PostgreSQL).
 - Terraform, OpenTofu and the OCI CLI run in containers through `scripts/`.
+- If a run is killed, `docker ps -a --filter name=floci-oci-psql` shows PostgreSQL containers left behind.

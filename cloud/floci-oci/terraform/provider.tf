@@ -4,12 +4,22 @@ terraform {
       source  = "oracle/oci"
       version = "9.12.1"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
   }
 }
 
 variable "tenancy_ocid" {
   type    = string
   default = "ocid1.tenancy.oc1..flocilocaltenancy0000000000000000000000000000000000000000"
+}
+
+variable "database_subnet_id" {
+  description = "Private subnet of the DB system. floci-oci 0.7.0 does not emulate Networking and stores the OCID as given."
+  type        = string
+  default     = "ocid1.subnet.oc1.iad.expensesprivatesubnet"
 }
 
 variable "user_ocid" {

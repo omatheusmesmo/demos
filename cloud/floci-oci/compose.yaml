@@ -5,3 +5,9 @@ services:
     container_name: floci-oci
     ports:
       - "4599:4599"
+    environment:
+      # Each OCI PostgreSQL DB system is a real postgres container started through the Docker socket. "published"
+      # reports its host port, which is what the application, running on the host, connects to.
+      FLOCI_OCI_DOCKER_ENDPOINT_MODE: published
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

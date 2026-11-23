@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# A tour of floci-oci with the unmodified OCI CLI, run inside the compat container (ocilocal = oci --endpoint ...).
-# Reads the resource OCIDs that scripts/provision.sh wrote to .env.
+# A tour of the expenses resources with the unmodified OCI CLI, run inside the compat container
+# (ocilocal = oci --endpoint ...). Reads the identifiers that scripts/provision.sh wrote to .env.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -8,36 +8,44 @@ cd "$(dirname "$0")/.."
 source .env
 
 tenancy=ocid1.tenancy.oc1..flocilocaltenancy0000000000000000000000000000000000000000
+bucket="$EXPENSES_STORAGE_BUCKET"
+namespace="$EXPENSES_STORAGE_NAMESPACE"
 oci() { docker exec -i floci-oci ocilocal "$@"; }
-step() { printf '\n\033[1m$ oci %s\033[0m\n' "$*"; }
+step() { printf '\n\033[1m$ %s\033[0m\n' "$*"; }
 
-step os ns get
-oci os ns get
+step oci psql db-system-collection list-db-systems --compartment-id "$tenancy"
+oci psql db-system-collection list-db-systems --compartment-id "$tenancy" \
+  --query 'data.items[].{name:"display-name",state:"lifecycle-state",version:"db-version",shape:shape}' --output table
 
-step os bucket list --compartment-id "$tenancy"
-oci os bucket list --compartment-id "$tenancy" --query 'data[].name'
+db_system_id=$(oci psql db-system-collection list-db-systems --compartment-id "$tenancy" \
+  --query 'data.items[0].id' --raw-output)
+step oci psql connection-details get --db-system-id "\$DB_SYSTEM_ID"
+oci psql connection-details get --db-system-id "$db_system_id" --query 'data."primary-db-endpoint"'
 
-step os object put -bn "$ORDERS_RECEIPTS_BUCKET" --name hello.txt
-echo "hello from the OCI CLI" | oci os object put -bn "$ORDERS_RECEIPTS_BUCKET" --namespace "$ORDERS_RECEIPTS_NAMESPACE" \
-  --name hello.txt --file - --force
-step os object get -bn "$ORDERS_RECEIPTS_BUCKET" --name hello.txt --file -
-oci os object get -bn "$ORDERS_RECEIPTS_BUCKET" --namespace "$ORDERS_RECEIPTS_NAMESPACE" --name hello.txt --file -
+step oci secrets secret-bundle get --secret-id "\$EXPENSES_DATABASE_PASSWORD_SECRET_ID"
+oci secrets secret-bundle get --secret-id "$EXPENSES_DATABASE_PASSWORD_SECRET_ID" \
+  --query 'data.{version:"version-number",stages:stages,type:"secret-bundle-content"."content-type"}'
 
-step queue messages put-messages --queue-id "\$ORDERS_EVENTS_QUEUE_ID"
-oci queue messages put-messages --queue-id "$ORDERS_EVENTS_QUEUE_ID" --messages '[{"content":"hello queue"}]'
-step queue messages get-messages --queue-id "\$ORDERS_EVENTS_QUEUE_ID" --visibility-in-seconds 0
-oci queue messages get-messages --queue-id "$ORDERS_EVENTS_QUEUE_ID" --visibility-in-seconds 0 --limit 5 \
-  --query 'data.messages[].content'
+step oci os preauth-request create -bn "$bucket" --access-type ObjectWrite --object-name incoming/cli-tour
+access_uri=$(oci os preauth-request create -bn "$bucket" --namespace "$namespace" --name cli-tour \
+  --access-type ObjectWrite --object-name incoming/cli-tour \
+  --time-expires "$(date -u -d '+15 minutes' +%Y-%m-%dT%H:%M:%SZ)" --query 'data."access-uri"' --raw-output)
+echo "$access_uri"
 
-step kms crypto encrypt --key-id "\$ORDERS_CARDS_KEY_ID"
-plaintext=$(printf '4111111111114242' | base64)
-ciphertext=$(oci kms crypto encrypt --key-id "$ORDERS_CARDS_KEY_ID" --plaintext "$plaintext" \
-  --query 'data.ciphertext' --raw-output)
-echo "$ciphertext"
-step kms crypto decrypt --key-id "\$ORDERS_CARDS_KEY_ID" --ciphertext ...
-oci kms crypto decrypt --key-id "$ORDERS_CARDS_KEY_ID" --ciphertext "$ciphertext" \
-  --query 'data.plaintext' --raw-output | base64 -d
-echo
+step curl -X PUT --data-binary @receipt.pdf "http://localhost:4599\$ACCESS_URI"
+printf '%%PDF-1.7 taxi receipt\n' | curl -fsS -X PUT --data-binary @- "http://localhost:4599$access_uri" \
+  -o /dev/null -w 'HTTP %{http_code}, no OCI signature\n'
 
-step os bucket get -bn does-not-exist
-oci os bucket get -bn does-not-exist --namespace "$ORDERS_RECEIPTS_NAMESPACE" 2>&1 | grep -E '"(code|message|status)"' || true
+step oci os object list -bn "$bucket" --prefix incoming/
+oci os object list -bn "$bucket" --namespace "$namespace" --prefix incoming/ --query 'data[].{name:name,size:size}'
+
+step oci kms crypto generate-data-encryption-key --key-id "\$EXPENSES_KEYS_KEY_ID"
+oci kms crypto generate-data-encryption-key --key-id "$EXPENSES_KEYS_KEY_ID" \
+  --key-shape '{"algorithm": "AES", "length": 32}' --include-plaintext-key false \
+  --query 'data.{ciphertext:ciphertext,plaintext:plaintext}'
+
+step oci queue messages get-stats --queue-id "\$EXPENSES_JOBS_QUEUE_ID"
+oci queue messages get-stats --queue-id "$EXPENSES_JOBS_QUEUE_ID" --query 'data.queue'
+
+step oci os bucket get -bn does-not-exist
+oci os bucket get -bn does-not-exist --namespace "$namespace" 2>&1 | grep -E '"(code|message|status)"' || true

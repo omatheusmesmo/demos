@@ -7,9 +7,9 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import java.util.Map;
 
 /**
- * Starts floci-oci, provisions the orders resources in it and hands their identifiers to the application, the way
+ * Starts floci-oci, provisions the expenses resources in it and hands their identifiers to the application, the way
  * {@code make provision} does from the Terraform outputs in dev mode. Tests read the values back as configuration
- * ({@code OrdersConfig}, {@code oci.endpoint}), never through static state: test resources and tests may not share a
+ * ({@code ExpensesConfig}, {@code oci.endpoint}), never through static state: test resources and tests may not share a
  * class loader.
  */
 public class FlociOciResource implements QuarkusTestResourceLifecycleManager {
@@ -28,12 +28,15 @@ public class FlociOciResource implements QuarkusTestResourceLifecycleManager {
                 FlociOciContainer.DEFAULT_TENANCY);
         return Map.of(
                 "oci.endpoint", container.endpoint(),
-                "orders.receipts.namespace", resources.namespace(),
-                "orders.receipts.bucket", resources.bucket(),
-                "orders.events.queue-id", resources.queueId(),
-                "orders.events.messages-endpoint", resources.messagesEndpoint(),
-                "orders.cards.key-id", resources.keyId(),
-                "orders.cards.crypto-endpoint", resources.cryptoEndpoint());
+                "expenses.storage.namespace", resources.namespace(),
+                "expenses.storage.bucket", resources.bucket(),
+                "expenses.jobs.queue-id", resources.queueId(),
+                "expenses.jobs.messages-endpoint", resources.messagesEndpoint(),
+                "expenses.keys.key-id", resources.keyId(),
+                "expenses.keys.crypto-endpoint", resources.cryptoEndpoint(),
+                "expenses.database.username", OciProvisioner.DATABASE_USER,
+                "expenses.database.password-secret-id", resources.passwordSecretId(),
+                "quarkus.datasource.jdbc.url", resources.jdbcUrl());
     }
 
     @Override

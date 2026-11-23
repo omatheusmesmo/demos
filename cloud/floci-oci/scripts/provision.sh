@@ -1,24 +1,31 @@
 #!/usr/bin/env bash
-# Provisions the orders resources in floci-oci with Terraform and writes their identifiers to .env,
-# which Quarkus reads in dev mode.
+# Provisions the expenses resources in floci-oci with Terraform and writes what the application needs to .env,
+# which Quarkus reads in dev mode. The database password is not in .env: the application reads it from the Vault.
 set -euo pipefail
 
-here="$(cd "$(dirname "$0")" && pwd)"
-tf="$here/tf.sh"
+root="$(cd "$(dirname "$0")/.." && pwd)"
+tf="$root/scripts/tf.sh"
 
 "$tf" init -input=false -no-color >/dev/null
 "$tf" apply -auto-approve -input=false -no-color
 
 output() { "$tf" output -raw "$1"; }
 
-cat > "$here/../.env" <<EOF
-ORDERS_RECEIPTS_NAMESPACE=$(output receipts_namespace)
-ORDERS_RECEIPTS_BUCKET=$(output receipts_bucket)
-ORDERS_EVENTS_QUEUE_ID=$(output events_queue_id)
-ORDERS_EVENTS_MESSAGES_ENDPOINT=$(output events_messages_endpoint)
-ORDERS_CARDS_KEY_ID=$(output cards_key_id)
-ORDERS_CARDS_CRYPTO_ENDPOINT=$(output cards_crypto_endpoint)
-EOF
+mkdir -p "$root/.certs"
+ca="$root/.certs/expenses-db-ca.pem"
+output database_ca_certificate > "$ca"
+
+cat > "$root/.env" <<ENV
+EXPENSES_STORAGE_NAMESPACE=$(output storage_namespace)
+EXPENSES_STORAGE_BUCKET=$(output storage_bucket)
+EXPENSES_JOBS_QUEUE_ID=$(output jobs_queue_id)
+EXPENSES_JOBS_MESSAGES_ENDPOINT=$(output jobs_messages_endpoint)
+EXPENSES_KEYS_KEY_ID=$(output keys_key_id)
+EXPENSES_KEYS_CRYPTO_ENDPOINT=$(output keys_crypto_endpoint)
+EXPENSES_DATABASE_JDBC_URL=jdbc:postgresql://$(output database_host):$(output database_port)/postgres?sslmode=verify-full&sslrootcert=$ca
+EXPENSES_DATABASE_USERNAME=$(output database_username)
+EXPENSES_DATABASE_PASSWORD_SECRET_ID=$(output database_password_secret_id)
+ENV
 
 echo "Wrote .env:"
-cat "$here/../.env"
+cat "$root/.env"

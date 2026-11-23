@@ -7,7 +7,8 @@ import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
 import com.oracle.bmc.keymanagement.KmsCryptoClient;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import com.oracle.bmc.queue.QueueClient;
-import dev.omatheusmesmo.demos.flocioci.order.OrdersConfig;
+import com.oracle.bmc.secrets.SecretsClient;
+import dev.omatheusmesmo.demos.flocioci.expense.ExpensesConfig;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
@@ -47,18 +48,28 @@ public class OciClients {
 
     @Produces
     @Singleton
-    QueueClient queue(AuthenticationDetailsProvider signer, OrdersConfig orders) {
+    QueueClient queue(AuthenticationDetailsProvider signer, ExpensesConfig expenses) {
         return QueueClient.builder()
-                .endpoint(orders.events().messagesEndpoint())
+                .endpoint(expenses.jobs().messagesEndpoint())
                 .build(signer);
     }
 
     @Produces
     @Singleton
-    KmsCryptoClient kmsCrypto(AuthenticationDetailsProvider signer, OrdersConfig orders) {
+    KmsCryptoClient kmsCrypto(AuthenticationDetailsProvider signer, ExpensesConfig expenses) {
         return KmsCryptoClient.builder()
-                .endpoint(orders.cards().cryptoEndpoint())
+                .endpoint(expenses.keys().cryptoEndpoint())
                 .build(signer);
+    }
+
+    @Produces
+    @Singleton
+    SecretsClient secrets(AuthenticationDetailsProvider signer, OciConfig config) {
+        SecretsClient client = SecretsClient.builder()
+                .region(Region.fromRegionId(config.region()))
+                .build(signer);
+        config.endpoint().ifPresent(client::setEndpoint);
+        return client;
     }
 
     void close(@Disposes ObjectStorageClient client) {
@@ -70,6 +81,10 @@ public class OciClients {
     }
 
     void close(@Disposes KmsCryptoClient client) {
+        client.close();
+    }
+
+    void close(@Disposes SecretsClient client) {
         client.close();
     }
 
