@@ -14,6 +14,7 @@ on your machine.
 | Quarkus LangChain4j | [`quarkus-langchain4j/onthinking`](quarkus-langchain4j/onthinking) (submodule) | `@OnThinking` in a customer support bot | |
 | Quarkus LangChain4j | [`quarkus-langchain4j/incident-response-sre`](quarkus-langchain4j/incident-response-sre) (submodule) | An SRE incident response agent: ChatModel, agentic and Quarkus Flow layers | |
 | Cloud | [`cloud/floci-aws`](cloud/floci-aws) (submodule) | Local AWS for Quarkus through Floci and Dev Services | |
+| Cloud | [`cloud/floci-oci`](cloud/floci-oci) | Oracle Cloud on localhost: Vault/KMS, Object Storage and Queue on floci-oci, Oracle Database through Dev Services, Terraform and the OCI CLI | Oracle Cloud on localhost with floci-oci |
 
 ## Layout
 
