@@ -1,0 +1,7 @@
+services:
+  floci-oci:
+    # The compat variant also ships the OCI CLI and a throwaway profile, used by scripts/cli-tour.sh.
+    image: floci/floci-oci:0.7.0-compat
+    container_name: floci-oci
+    ports:
+      - "4599:4599"
