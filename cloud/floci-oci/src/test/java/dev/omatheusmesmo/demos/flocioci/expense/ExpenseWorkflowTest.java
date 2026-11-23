@@ -10,6 +10,7 @@ import com.oracle.bmc.queue.model.PutMessagesDetailsEntry;
 import com.oracle.bmc.queue.requests.GetStatsRequest;
 import com.oracle.bmc.queue.requests.PutMessagesRequest;
 import dev.omatheusmesmo.demos.flocioci.support.FlociOciResource;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -127,15 +128,27 @@ class ExpenseWorkflowTest {
                 HttpResponse.BodyHandlers.discarding()).statusCode()).isEqualTo(404);
     }
 
+    /**
+     * The job is enqueued before the submission commits, so the worker can see it first. Holding the claim at
+     * {@code AWAITING_RECEIPT} until the worker has taken the job reproduces that window deterministically.
+     */
+    @Test
+    void retriesAJobThatArrivesBeforeTheSubmissionCommits() throws Exception {
+        Claim claim = open("ines");
+        upload(claim.uploadUrl(), PDF);
+        enqueueRaw(claim.id().toString());
+        await().atMost(PROCESSING).until(() -> inFlightJobs() > 0);
+
+        QuarkusTransaction.requiringNew().run(() ->
+                Expense.update("status = ?1 where id = ?2", ExpenseStatus.SUBMITTED, claim.id()));
+
+        awaitStatus(claim.id(), ExpenseStatus.READY_FOR_REVIEW);
+    }
+
     @Test
     void movesAJobThatKeepsFailingToTheDeadLetterQueue() {
         long deadLettersBefore = deadLetters();
-        queue.putMessages(PutMessagesRequest.builder()
-                .queueId(config.jobs().queueId())
-                .putMessagesDetails(PutMessagesDetails.builder()
-                        .messages(List.of(PutMessagesDetailsEntry.builder().content("not-an-expense-id").build()))
-                        .build())
-                .build());
+        enqueueRaw("not-an-expense-id");
 
         await().atMost(PROCESSING).until(() -> deadLetters() > deadLettersBefore);
     }
@@ -221,6 +234,20 @@ class ExpenseWorkflowTest {
                 .bucketName(config.storage().bucket())
                 .objectName(name)
                 .build());
+    }
+
+    private void enqueueRaw(String content) {
+        queue.putMessages(PutMessagesRequest.builder()
+                .queueId(config.jobs().queueId())
+                .putMessagesDetails(PutMessagesDetails.builder()
+                        .messages(List.of(PutMessagesDetailsEntry.builder().content(content).build()))
+                        .build())
+                .build());
+    }
+
+    private long inFlightJobs() {
+        return queue.getStats(GetStatsRequest.builder().queueId(config.jobs().queueId()).build())
+                .getQueueStats().getQueue().getInFlightMessages();
     }
 
     private long deadLetters() {

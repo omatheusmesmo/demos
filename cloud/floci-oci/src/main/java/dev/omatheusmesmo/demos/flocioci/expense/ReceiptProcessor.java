@@ -12,8 +12,12 @@ import java.util.UUID;
 
 /**
  * Handles one receipt job. Every step can run again safely, because the queue delivers a job again whenever the
- * previous attempt did not finish: a job for an expense that is no longer {@code SUBMITTED} is a no-op, and the
+ * previous attempt did not finish: a job for an expense that is already processed only finishes the cleanup, and the
  * uploaded file is only deleted once the record points at the encrypted copy.
+ * <p>
+ * The job is enqueued inside the transaction that submits the expense, so a failed enqueue rolls the submission back.
+ * The worker can therefore receive the job before that transaction commits, and still see the expense as
+ * {@code AWAITING_RECEIPT}. That job is not acknowledged: the queue delivers it again once the commit is visible.
  */
 @ApplicationScoped
 public class ReceiptProcessor {
@@ -33,8 +37,14 @@ public class ReceiptProcessor {
         if (expense == null) {
             throw new IllegalStateException("No expense " + expenseId);
         }
-        if (expense.status != ExpenseStatus.SUBMITTED) {
-            return;
+        switch (expense.status) {
+            case AWAITING_RECEIPT -> throw new IllegalStateException("Expense " + expenseId + " is not submitted yet");
+            case READY_FOR_REVIEW, REJECTED -> {
+                bucket.delete(ReceiptBucket.incoming(expenseId));
+                return;
+            }
+            case SUBMITTED -> {
+            }
         }
 
         byte[] file = bucket.read(ReceiptBucket.incoming(expenseId));

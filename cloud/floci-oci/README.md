@@ -39,12 +39,12 @@ A job that keeps failing is left to the queue: after 3 deliveries it lands in th
 
 ## What the tests prove
 
-`make test` starts floci-oci in a container, provisions everything (the PostgreSQL DB system included) and runs 14
+`make test` starts floci-oci in a container, provisions everything (the PostgreSQL DB system included) and runs 15
 tests. The tests check the OCI side directly, not only the HTTP responses:
 
 | Test | Proves |
 |---|---|
-| `ExpenseWorkflowTest` | A PDF uploaded through the pre-authenticated URL comes back byte for byte; the bucket holds only ciphertext under `receipts/` and nothing left in `incoming/`; a file that is not a receipt is rejected; submitting without an upload or twice is a 409; the upload URL cannot write any other object nor read its own; a poison job reaches the dead-letter queue; claims are listed from the database; invalid input is a 400; an unknown claim is a 404 |
+| `ExpenseWorkflowTest` | A PDF uploaded through the pre-authenticated URL comes back byte for byte; the bucket holds only ciphertext under `receipts/` and nothing left in `incoming/`; a file that is not a receipt is rejected; submitting without an upload or twice is a 409; the upload URL cannot write any other object nor read its own; a job that arrives before its submission commits is retried, not dropped; a poison job reaches the dead-letter queue; claims are listed from the database; invalid input is a 400; an unknown claim is a 404 |
 | `ReceiptCipherRotationTest` | KMS envelope encryption is real: every receipt gets its own data key, and a receipt sealed before a master key rotation still opens after it |
 | `TenancyIsolationTest` | One floci-oci, two tenancies: a bucket of tenancy A is invisible to tenancy B (`404 NotAuthorizedOrNotFound` on A's compartment, `404 BucketNotFound` by name), and both can own a bucket with the same name |
 
@@ -60,7 +60,7 @@ Terraform 1.10.5, OpenTofu 1.9.1, OCI CLI 3.96.0 and the `oracle/oci` provider 9
 ## Run it
 
 ```shell
-make test        # the 14 tests, nothing to start by hand
+make test        # the 15 tests, nothing to start by hand
 make dev         # floci-oci + Terraform apply + quarkus dev
 make cli-tour    # the unmodified OCI CLI against the same resources
 make drift       # terraform plan -detailed-exitcode: exit 0 means no drift

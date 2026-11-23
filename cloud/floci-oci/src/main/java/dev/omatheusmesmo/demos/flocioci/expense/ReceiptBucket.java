@@ -107,11 +107,20 @@ public class ReceiptBucket {
                 .build());
     }
 
+    /**
+     * Deletes the object if it is still there, so a retried job can run the same cleanup again.
+     */
     public void delete(String objectName) {
-        objectStorage.deleteObject(DeleteObjectRequest.builder()
-                .namespaceName(storage.namespace())
-                .bucketName(storage.bucket())
-                .objectName(objectName)
-                .build());
+        try {
+            objectStorage.deleteObject(DeleteObjectRequest.builder()
+                    .namespaceName(storage.namespace())
+                    .bucketName(storage.bucket())
+                    .objectName(objectName)
+                    .build());
+        } catch (BmcException e) {
+            if (e.getStatusCode() != 404) {
+                throw e;
+            }
+        }
     }
 }
