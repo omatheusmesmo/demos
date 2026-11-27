@@ -1,0 +1,17 @@
+{
+  "customerCode": "GLOBEX",
+  "discount": 25.81,
+  "id": 2,
+  "issueDate": "2026-12-02",
+  "lines": [
+    {
+      "amount": 516.30,
+      "quantity": 10,
+      "sku": "WIDGET",
+      "unitPrice": 51.63
+    }
+  ],
+  "reference": "SU5WLTItR0xPQkVY",
+  "subtotal": 516.30,
+  "total": 490.49
+}

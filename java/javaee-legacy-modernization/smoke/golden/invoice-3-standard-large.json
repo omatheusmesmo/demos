@@ -1,0 +1,17 @@
+{
+  "customerCode": "INITECH",
+  "discount": 25.00,
+  "id": 3,
+  "issueDate": "2026-12-03",
+  "lines": [
+    {
+      "amount": 1200.00,
+      "quantity": 2,
+      "sku": "SERVER",
+      "unitPrice": 600.00
+    }
+  ],
+  "reference": "SU5WLTMtSU5JVEVDSA==",
+  "subtotal": 1200.00,
+  "total": 1175.00
+}

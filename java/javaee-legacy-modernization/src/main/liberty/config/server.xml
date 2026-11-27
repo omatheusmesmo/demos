@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="Invoicing back office">
+
+    <featureManager>
+        <feature>javaee-8.0</feature>
+    </featureManager>
+
+    <!-- The full platform feature enables remote EJB over IIOP, which needs a user registry before any application starts. -->
+    <basicRegistry id="basic" realm="BasicRealm"/>
+
+    <httpEndpoint id="defaultHttpEndpoint" host="localhost" httpPort="${http.port}" httpsPort="-1"/>
+
+    <library id="h2Library">
+        <fileset dir="${server.config.dir}/lib/global" includes="h2-*.jar"/>
+    </library>
+
+    <dataSource id="invoicingDataSource" jndiName="jdbc/invoicing">
+        <jdbcDriver libraryRef="h2Library" javax.sql.DataSource="org.h2.jdbcx.JdbcDataSource"/>
+        <properties URL="jdbc:h2:mem:invoicing;DB_CLOSE_DELAY=-1" user="invoicing" password="invoicing"/>
+    </dataSource>
+
+    <webApplication id="invoicing" location="invoicing.war" contextRoot="/"/>
+</server>
