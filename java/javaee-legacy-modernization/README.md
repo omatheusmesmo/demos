@@ -48,5 +48,11 @@ It needs JDK 8 and JDK 25 (`sdk install java 8.0.514.0+1-tem`, `sdk install java
 
 Open this folder (not the repository root) as the workspace, so Bob picks up `.bob/rules/migration.md` and
 `.bob/.bobignore`. Then ask for one card at a time, with the prompt written in each card. Every card is delivered as
-its own branch and pull request, described in its Pull request section; `main` keeps only the legacy application and
-the cards.
+its own branch and pull request into `javaee-migration`, described in its Pull request section; `main` keeps only the
+legacy application and the cards. Create `javaee-migration` from `main` once, before the first card.
+
+`make bob-approvals` lets Bob run the demo without an approval click: builds, checks, git, `gh`, file edits and
+the usual shell tools are pre-approved, with no deny list. Bob reads approvals only from its global settings, so the
+target merges `scripts/bob-approval.json` into `~/.bob/settings/settings.json` (a backup is written next to it) and
+the approvals apply to every workspace; close Bob before running it. What Bob may push or merge is set by
+`.bob/rules/migration.md`, not by the approvals.

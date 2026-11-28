@@ -37,18 +37,15 @@ JDK in Java 15. On a modern JDK the engine is simply missing and every invoice f
 
 ## Pull request
 
-- Branch: `mig-04-nashorn-rules`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-04-nashorn-rules`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): port the discount rules from Nashorn to Java`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains how the Java rules
-  keep every amount the JavaScript rules produced, including the half cent case, and that the script is gone.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, how the Java
+  rules keep every amount the JavaScript rules produced, including the half cent case, and that the script is gone.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-04 (roadmap/MIG-04-nashorn-rules.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-04` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-High. The best judgment moment of the roadmap: the obvious `BigDecimal` port gives 25.82 where the issued invoice
-says 25.81, and both the unit tests and the smoke catch it. Good candidate for the live run.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

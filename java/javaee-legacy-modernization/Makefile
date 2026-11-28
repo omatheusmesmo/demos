@@ -1,7 +1,7 @@
 # Entry point for every task of the demo. The JDK comes from .sdkmanrc unless JDK=<major> is given.
 JDK ?= $(shell sed -n 's/^java=\([0-9]*\).*/\1/p' .sdkmanrc)
 
-.PHONY: test smoke run card board
+.PHONY: test smoke run card board bob-approvals
 
 test:
 	bash -c "source scripts/lib.sh && clean_build_outputs"
@@ -19,3 +19,6 @@ card:
 
 board:
 	scripts/board.sh
+
+bob-approvals:
+	scripts/bob-approvals.sh

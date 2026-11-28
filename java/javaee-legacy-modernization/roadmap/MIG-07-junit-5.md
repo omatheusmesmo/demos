@@ -27,18 +27,15 @@ JUnit 4 is in maintenance mode. JUnit 5 (Jupiter) is what current tooling and th
 
 ## Pull request
 
-- Branch: `mig-07-junit-5`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-07-junit-5`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `test(java/javaee-legacy-modernization): migrate the tests from JUnit 4 to JUnit 5`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains the recipe that was
-  run, and anything it left for a manual change.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, the recipe
+  that was run, and anything it left for a manual change.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-07 (roadmap/MIG-07-junit-5.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-07` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Medium as a contrast: an OpenRewrite recipe (`org.openrewrite.java.testing.junit5.JUnit4to5Migration`) does almost
-all of it in seconds, without spending tokens on the transformation itself.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

@@ -1,0 +1,23 @@
+{
+  "autoApprovalEnabled": true,
+  "outsideWorkspaceAllowed": true,
+  "allowed_permissions": ["read", "edit", "execute", "mcp", "todo", "skill", "subagent", "subtask", "mode"],
+  "allowedExecutors": [
+    {
+      "toolId": "execute_command",
+      "approvedCommands": [
+        "git", "gh",
+        "make", "./mvnw", "mvn", "java", "javac", "javap", "jar", "jshell", "sdk",
+        "scripts/card.sh", "scripts/board.sh", "scripts/smoke.sh", "scripts/with-jdk.sh", "scripts/lib.sh",
+        "scripts/bob-approvals.sh", "bash", "sh", "source", ".",
+        "cd", "pwd", "ls", "tree", "cat", "head", "tail", "less", "grep", "rg", "find", "sed", "awk", "cut", "tr",
+        "sort", "uniq", "wc", "diff", "cmp", "xargs", "tee", "echo", "printf", "test", "true", "false", "date",
+        "env", "export", "which", "type", "du", "df", "file", "stat",
+        "mkdir", "touch", "cp", "mv", "rm", "chmod", "ln",
+        "curl", "wget", "jq", "unzip", "zip", "tar", "python3",
+        "ps", "kill", "pkill", "lsof", "fuser", "sleep"
+      ],
+      "deniedCommands": []
+    }
+  ]
+}

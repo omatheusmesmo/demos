@@ -27,18 +27,15 @@ The XML export uses JAXB (`javax.xml.bind`), which shipped inside the JDK until 
 
 ## Pull request
 
-- Branch: `mig-05-jaxb`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-05-jaxb`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `build(java/javaee-legacy-modernization): depend on XML binding explicitly instead of on the JDK`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains which artifact
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, which artifact
   provides XML binding now, in which scope, and why the server still provides it at runtime.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-05 (roadmap/MIG-05-jaxb.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-05` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Low to medium. Shows the difference between what the JDK, the platform API and the server each provide, which
-matters again in MIG-08.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

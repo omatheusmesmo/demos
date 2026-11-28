@@ -28,17 +28,15 @@ Java 9. The code does not compile on any modern JDK.
 
 ## Pull request
 
-- Branch: `mig-02-base64`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-02-base64`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): encode invoice references with java.util.Base64`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains that the references
-  are byte for byte the ones the legacy encoder produced.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, that the
+  references are byte for byte the ones the legacy encoder produced.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-02 (roadmap/MIG-02-base64.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-02` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Low. Good to show that `java.util.Base64` already exists on Java 8: the code is fixed before the JDK changes.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

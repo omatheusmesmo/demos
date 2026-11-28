@@ -25,8 +25,15 @@ This project is a legacy Java EE 8 application on Java 8 that is migrated one ro
 
 ## Delivering a card
 
+- The migration lives on `javaee-migration`. Start every card from it, up to date: `git switch javaee-migration`,
+  `git pull`, then create the card's branch. If the previous card's pull request is still open, or
+  `javaee-migration` does not exist, stop and say so.
 - One card, one branch, one commit, one pull request. Use the branch name and the title in the card's Pull request
   section; the title is also the commit message.
-- Write the pull request description with the template in `roadmap/README.md`, including the `make card` output and
-  what was fixed by hand after a recipe.
-- Never merge into `main` and never push: the presenter pushes and opens the pull request.
+- Push only the card's branch, then open the pull request against `javaee-migration`:
+  `gh pr create --base javaee-migration --title "<title>" --body-file <description>`.
+- Write the description with the template in `roadmap/README.md`, in `pr-body.md` at the demo root (git ignores
+  it). Keep it short: the change, its benefit, the method and the `make card` output. Never put costs or Bobcoins
+  in it.
+- Never push to `javaee-migration` or `main`, never open a pull request against `main` and never merge: a person
+  reviews and merges every card.

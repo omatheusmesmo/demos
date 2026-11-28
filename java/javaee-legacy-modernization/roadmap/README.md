@@ -32,59 +32,69 @@ only in MIG-06, and the namespace only in MIG-08, so a failure always points at 
 
 ## Working on a card
 
-Every card is one branch and one pull request. `main` holds only the legacy application and these cards: it is the
-input of the demo, and the migration is never merged into it.
+There are two long-lived branches:
 
-1. Create the branch named in the card, from the branch of the last finished card, or from `main` for the first one.
-   Cards build on each other, so the pull requests are stacked.
+- `main` holds only the legacy application and these cards. It is the input of the demo, and the migration is never
+  merged into it.
+- `javaee-migration` holds the migration. It is created once from `main` before the first card, and grows by one
+  merged pull request per card.
+
+Every card is one branch and one pull request into `javaee-migration`:
+
+1. Start from `javaee-migration`, up to date, with the previous card's pull request merged. Create the branch named
+   in the card.
 2. Read the card. Its Scope says what may change; its Acceptance says when it is done.
 3. Change the code. `make card CARD=MIG-06` runs the card's own checks, then the regression gates:
    - the golden files under `smoke/golden/` are untouched;
    - the unit tests pass on the card's JDK;
    - `scripts/smoke.sh` starts the application on Open Liberty and every response matches the golden files, which
      were recorded on the legacy baseline.
-4. When it prints `DONE`, commit with the title in the card's Pull request section and open the pull request.
+4. When it prints `DONE`, commit with the title in the card's Pull request section, push the card's branch and open
+   the pull request against `javaee-migration`.
+5. A person reviews the diff and merges it. Only then does the next card start.
 
 Every card's checks fail on `main` (red first) and pass after a correct migration. A finished card stays finished:
-later cards never turn an earlier card red.
+later cards never turn an earlier card red. On `javaee-migration`, `make board` shows `DONE` for every merged card.
+
+The pull requests into `javaee-migration` do not run the repository CI, which builds on Java 8 and stops making sense
+once a card moves the JDK. The proof of a card is the `make card` output in its description.
 
 ## Pull requests
 
-The title is the one in the card, a Conventional Commit with the demo path as scope. The description has these
-sections, plus what the card's Pull request section asks to explain:
+The title is the one in the card, a Conventional Commit with the demo path as scope. The description is short: a
+reviewer reads it in under a minute. It has these sections and nothing else:
 
 ```markdown
 ## Card
 MIG-NN: <card title>, with a link to roadmap/MIG-NN-*.md
 
-## What changed
-One line per file or group of files, and why.
+## Change
+One or two sentences: what changed and what the application gains from it, including what the card's Pull request
+section asks to mention.
 
 ## How
-What an OpenRewrite recipe did (which recipe, and what of its diff was kept or fixed) and what was changed by hand.
+One or two lines: the OpenRewrite recipe that ran and what was fixed by hand after it, or why the change was made
+by hand.
 
 ## Checks
 The output of `make card CARD=MIG-NN`, ending in DONE.
-
-## Cost
-Bobcoins spent on the card, against its estimate and cap.
 ```
+
+No costs, no Bobcoins, no tables of attempts and no long error dumps: a line with the error message is enough.
 
 ## Budget rules
 
 - A card that goes over its `cap_bobcoins` is stopped, its branch is dropped and the card is split.
 - Checking a card costs nothing: `make card` is a script, not a prompt.
-- Resetting costs nothing: `git restore . && git clean -fd` on the card's branch, or a fresh branch from the previous
-  card, never "undo that" in a prompt.
+- Resetting costs nothing: `git restore . && git clean -fd` on the card's branch, or a fresh branch from
+  `javaee-migration`, never "undo that" in a prompt.
 
-## Demo states
+## Stopping at any card
 
-| State | Cards done | What it shows |
-|---|---|---|
-| A, minimum | MIG-01 to MIG-04 | the board, the cleanup on Java 8, Bob's judgment on the discount rules |
-| B, target | + MIG-05, MIG-06 | the same application, the same smoke, now on JDK 25 |
-| C, full | + MIG-08 | Jakarta EE 11 on Open Liberty, on Java 25 |
+Nothing in the roadmap assumes that every card gets done in one session. Time can run out, the budget can run out,
+or a card can go wrong. In every case `javaee-migration` stays at the last merged card, which is green, and a card
+in progress stays on its own branch or in an open pull request, to be finished or dropped later.
 
-Moving between states (switching to another card's branch, or resetting a card that went wrong) is safe: `make test`,
-`make smoke` and `make card` remove what an earlier build left in `target/` and start Liberty clean, because a
-workarea built for `jakartaee-11.0` makes a `javaee-8.0` server start without security.
+Moving between cards (switching to `javaee-migration` or to a card's branch, or resetting a card that went wrong) is
+safe: `make test`, `make smoke` and `make card` remove what an earlier build left in `target/` and start Liberty
+clean, because a workarea built for `jakartaee-11.0` makes a `javaee-8.0` server start without security.

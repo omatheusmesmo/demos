@@ -15,8 +15,8 @@ it is the input of the demo.
 - `smoke/golden/` was recorded on the baseline. Never edit or re-record it; `smoke/golden.sha256` guards it.
 - Every card has a checks file in `roadmap/checks/`. A card's checks must fail on `main` and pass after a
   correct migration, and must not fail again once a later card is done. Verify both when changing a card.
-- When working on a card, follow `.bob/rules/migration.md`: one card per branch and per pull request, never merged
-  into `main`.
+- When working on a card, follow `.bob/rules/migration.md`: one card per branch and per pull request into
+  `javaee-migration`, never into `main`.
 
 ## Build and test
 
