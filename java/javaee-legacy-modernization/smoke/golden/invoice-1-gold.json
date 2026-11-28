@@ -1,0 +1,23 @@
+{
+  "customerCode": "ACME",
+  "discount": 123.45,
+  "id": 1,
+  "issueDate": "2026-12-01",
+  "lines": [
+    {
+      "amount": 31.50,
+      "quantity": 3,
+      "sku": "WIDGET",
+      "unitPrice": 10.50
+    },
+    {
+      "amount": 1203.00,
+      "quantity": 1,
+      "sku": "GADGET",
+      "unitPrice": 1203.00
+    }
+  ],
+  "reference": "SU5WLTEtQUNNRQ==",
+  "subtotal": 1234.50,
+  "total": 1111.05
+}

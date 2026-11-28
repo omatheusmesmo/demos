@@ -1,0 +1,59 @@
+[
+  {
+    "customerCode": "ACME",
+    "discount": 123.45,
+    "id": 1,
+    "issueDate": "2026-12-01",
+    "lines": [
+      {
+        "amount": 31.50,
+        "quantity": 3,
+        "sku": "WIDGET",
+        "unitPrice": 10.50
+      },
+      {
+        "amount": 1203.00,
+        "quantity": 1,
+        "sku": "GADGET",
+        "unitPrice": 1203.00
+      }
+    ],
+    "reference": "SU5WLTEtQUNNRQ==",
+    "subtotal": 1234.50,
+    "total": 1111.05
+  },
+  {
+    "customerCode": "GLOBEX",
+    "discount": 25.81,
+    "id": 2,
+    "issueDate": "2026-12-02",
+    "lines": [
+      {
+        "amount": 516.30,
+        "quantity": 10,
+        "sku": "WIDGET",
+        "unitPrice": 51.63
+      }
+    ],
+    "reference": "SU5WLTItR0xPQkVY",
+    "subtotal": 516.30,
+    "total": 490.49
+  },
+  {
+    "customerCode": "INITECH",
+    "discount": 25.00,
+    "id": 3,
+    "issueDate": "2026-12-03",
+    "lines": [
+      {
+        "amount": 1200.00,
+        "quantity": 2,
+        "sku": "SERVER",
+        "unitPrice": 600.00
+      }
+    ],
+    "reference": "SU5WLTMtSU5JVEVDSA==",
+    "subtotal": 1200.00,
+    "total": 1175.00
+  }
+]

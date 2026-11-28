@@ -15,6 +15,7 @@ on your machine.
 | Quarkus LangChain4j | [`quarkus-langchain4j/incident-response-sre`](quarkus-langchain4j/incident-response-sre) (submodule) | An SRE incident response agent: ChatModel, agentic and Quarkus Flow layers | |
 | Cloud | [`cloud/floci-aws`](cloud/floci-aws) (submodule) | Local AWS for Quarkus through Floci and Dev Services | |
 | Cloud | [`cloud/floci-oci`](cloud/floci-oci) | Oracle Cloud on localhost: an expense receipts pipeline on OCI PostgreSQL, Vault, pre-authenticated uploads, Queue with a dead-letter queue and KMS envelope encryption, all on floci-oci, provisioned by Terraform/OpenTofu | Oracle Cloud on localhost with floci-oci |
+| Java | [`java/javaee-legacy-modernization`](java/javaee-legacy-modernization) | A Java EE 8 application on Java 8 and a roadmap of checked cards that migrates it to Java 25 and Jakarta EE 11 on Open Liberty, for a live IBM Bob demo | |
 
 ## Layout
 
@@ -24,6 +25,7 @@ demos/
 ├── quarkus/              Quarkus demos
 ├── quarkus-langchain4j/  Quarkus LangChain4j demos
 ├── cloud/                cloud provider demos
+├── java/                 Java and Jakarta EE demos
 └── .github/              one workflow per in-tree demo, built on reusable workflows
 ```
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<invoice reference="SU5WLTEtQUNNRQ==">
+  <customer>ACME</customer>
+  <issueDate>2026-12-01</issueDate>
+  <lines>
+    <line sku="WIDGET" quantity="3" unitPrice="10.50" amount="31.50"/>
+    <line sku="GADGET" quantity="1" unitPrice="1203.00" amount="1203.00"/>
+  </lines>
+  <subtotal>1234.50</subtotal>
+  <discount>123.45</discount>
+  <total>1111.05</total>
+</invoice>

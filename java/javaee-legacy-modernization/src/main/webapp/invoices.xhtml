@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Invoicing back office</title>
+    <style>
+        body { font-family: Tahoma, Verdana, sans-serif; background: #ece9d8; margin: 24px; }
+        h1 { font-size: 18px; color: #0a246a; }
+        table { border-collapse: collapse; background: #fff; }
+        th { background: #0a246a; color: #fff; padding: 4px 10px; text-align: left; }
+        td { border: 1px solid #aca899; padding: 4px 10px; }
+        .footer { margin-top: 12px; font-size: 11px; color: #555; }
+    </style>
+</h:head>
+<h:body>
+    <h1>Invoicing back office</h1>
+    <h:dataTable id="invoices" value="#{invoiceList.invoices}" var="invoice">
+        <h:column>
+            <f:facet name="header">Reference</f:facet>
+            #{invoice.reference}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Customer</f:facet>
+            #{invoice.customerCode}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Issued</f:facet>
+            #{invoice.issueDate}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Total</f:facet>
+            #{invoice.total}
+        </h:column>
+    </h:dataTable>
+    <p class="footer">Running on Java #{invoiceList.javaVersion}</p>
+</h:body>
+</html>

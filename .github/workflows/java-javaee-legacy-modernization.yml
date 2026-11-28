@@ -1,0 +1,25 @@
+name: java/javaee-legacy-modernization
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - java/javaee-legacy-modernization/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/java-javaee-legacy-modernization.yml
+  pull_request:
+    paths:
+      - java/javaee-legacy-modernization/**
+      - tooling/**
+      - .github/workflows/_quarkus-maven.yml
+      - .github/workflows/java-javaee-legacy-modernization.yml
+  workflow_dispatch:
+
+jobs:
+  verify:
+    uses: ./.github/workflows/_quarkus-maven.yml
+    with:
+      working-directory: java/javaee-legacy-modernization
+      modules: '["."]'
+      java-version: '8'

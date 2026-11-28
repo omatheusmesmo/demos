@@ -1,0 +1,17 @@
+[
+  {
+    "code": "ACME",
+    "name": "Acme Corporation",
+    "tier": "GOLD"
+  },
+  {
+    "code": "GLOBEX",
+    "name": "Globex Inc.",
+    "tier": "SILVER"
+  },
+  {
+    "code": "INITECH",
+    "name": "Initech LLC",
+    "tier": "STANDARD"
+  }
+]
