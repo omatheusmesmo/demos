@@ -29,18 +29,15 @@ base. Not validated end to end yet: treat the estimate as a guess.
 
 ## Pull request
 
-- Branch: `mig-10-quarkus`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-10-quarkus`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): move from Open Liberty to Quarkus`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains what replaced each of
-  EJB, JSF and Liberty, and what was left out of the card and why.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, what replaced
+  each of EJB, JSF and Liberty, and what was left out of the card and why.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-10 (roadmap/MIG-10-quarkus.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-10` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-High but risky: an EJB is transactional by default and a CDI bean is not, so a missing `@Transactional` compiles
-and silently stops saving. Better as the "what comes next" slide unless there is time and Bobcoins left.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

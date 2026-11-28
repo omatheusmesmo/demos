@@ -30,19 +30,15 @@ Java EE 8 is the last release in the `javax` namespace. Every current runtime, l
 
 ## Pull request
 
-- Branch: `mig-08-jakarta-ee-11`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-08-jakarta-ee-11`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): migrate from Java EE 8 to Jakarta EE 11`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains the recipe that was
-  run, what of its diff was kept, what was fixed by hand and why, and the Liberty features before and after.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, the recipe
+  that was run, what of its diff was kept, what was fixed by hand and why, and the Liberty features before and after.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-08 (roadmap/MIG-08-jakarta-ee-11.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-08` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-High, and the climax of the roadmap. The recipe `org.openrewrite.java.migrate.jakarta.JakartaEE11` rewrites most
-files in seconds, but its output still needs review, and one difference between `javaee-8.0` and
-`jakartaee-11.0` only shows up when the application runs.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

@@ -28,17 +28,15 @@ opens a new `AuditLog` for every invoice and never closes it, so file handles le
 
 ## Pull request
 
-- Branch: `mig-03-finalize`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-03-finalize`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): close the audit log explicitly instead of in finalize()`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains where the audit log
-  is closed now, and why `finalize()` never guaranteed it.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, where the
+  audit log is closed now, and why `finalize()` never guaranteed it.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-03 (roadmap/MIG-03-finalize.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-03` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Medium. A design change, not a syntax change: Bob has to find the callers and decide who owns the resource.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

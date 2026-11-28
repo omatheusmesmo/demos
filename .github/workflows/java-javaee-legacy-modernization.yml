@@ -9,6 +9,7 @@ on:
       - .github/workflows/_quarkus-maven.yml
       - .github/workflows/java-javaee-legacy-modernization.yml
   pull_request:
+    branches: [main]
     paths:
       - java/javaee-legacy-modernization/**
       - tooling/**

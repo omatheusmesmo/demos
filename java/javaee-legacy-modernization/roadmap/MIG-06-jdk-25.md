@@ -28,18 +28,15 @@ With the blockers gone, the application can move to Java 25 (LTS) on its current
 
 ## Pull request
 
-- Branch: `mig-06-jdk-25`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-06-jdk-25`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `build(java/javaee-legacy-modernization): build and run on JDK 25`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains every change besides
-  the JDK version that JDK 25 required, each with the error that made it necessary.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, every change
+  besides the JDK version that JDK 25 required, each with the error that made it necessary.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-06 (roadmap/MIG-06-jdk-25.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-06` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-High. The visible jump (the JSF page footer goes from `1.8.0` to `25`), and one failure nobody planned for in the
-earlier cards shows up only here. Fixing it with a JVM flag instead of a real fix is forbidden by the rules.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

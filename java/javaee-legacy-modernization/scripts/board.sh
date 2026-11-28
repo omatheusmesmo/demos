@@ -7,7 +7,7 @@ cd "$DEMO_DIR"
 
 field() { sed -n "s/^$2: *//p" "$1" | head -1 | tr -d '"'; }
 
-printf '%-7s %-9s %-8s %-11s %s\n' CARD STATUS PRIO BOBCOINS TITLE
+printf '%-7s %-9s %-8s %s\n' CARD STATUS PRIO TITLE
 for card in roadmap/MIG-*.md; do
     id=$(field "$card" id)
     if [[ "$(field "$card" priority)" == blocked ]]; then
@@ -17,6 +17,5 @@ for card in roadmap/MIG-*.md; do
     else
         status=TODO
     fi
-    printf '%-7s %-9s %-8s %-11s %s\n' "$id" "$status" "$(field "$card" priority)" \
-        "$(field "$card" estimate_bobcoins)/$(field "$card" cap_bobcoins)" "$(field "$card" title)"
+    printf '%-7s %-9s %-8s %s\n' "$id" "$status" "$(field "$card" priority)" "$(field "$card" title)"
 done

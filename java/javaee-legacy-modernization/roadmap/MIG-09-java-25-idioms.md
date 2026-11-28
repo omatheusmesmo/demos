@@ -28,17 +28,15 @@ thread safe.
 
 ## Pull request
 
-- Branch: `mig-09-java-25-idioms`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-09-java-25-idioms`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `refactor(java/javaee-legacy-modernization): use records and java.time in the API`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains which classes became
-  records, how dates are represented now, and that the JSON did not change.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, which classes
+  became records, how dates are represented now, and that the JSON did not change.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-09 (roadmap/MIG-09-java-25-idioms.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-09` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Medium. Nice before/after code on a slide; only worth Bobcoins if the reserve is healthy.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.

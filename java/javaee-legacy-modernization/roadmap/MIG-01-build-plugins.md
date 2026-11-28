@@ -28,17 +28,15 @@ The build itself cannot run on a modern JDK: `maven-war-plugin` 2.2 fails on JDK
 
 ## Pull request
 
-- Branch: `mig-01-build-plugins`, from the branch of the last finished card (`main` if there is none).
+- Branch: `mig-01-build-plugins`, from `javaee-migration` once the previous card's pull request is merged.
+- Base of the pull request: `javaee-migration`, never `main`.
 - Title and commit message: `build(java/javaee-legacy-modernization): upgrade the build plugins to versions that run on a modern JDK`
-- The description follows the template in [README.md](README.md#pull-requests) and also explains the version of each
-  plugin before and after, and the error the old one gives on a modern JDK.
+- The description follows the template in [README.md](README.md#pull-requests) and mentions, in a line, the version of
+  each plugin before and after, and the error the old one gives on a modern JDK.
 
 ## Prompt for Bob
 
 > Implement roadmap card MIG-01 (roadmap/MIG-01-build-plugins.md) on the branch named in its Pull request
 > section. Stay inside its scope and finish only when `make card CARD=MIG-01` prints DONE. Then commit
-> with the title from the card and write the pull request description.
-
-## Demo value
-
-Low. A warm-up card: it shows the loop (read the card, change, `make card`) with almost no risk.
+> with the title from the card, push the branch and open the pull request against `javaee-migration`
+> with the description from the template.
